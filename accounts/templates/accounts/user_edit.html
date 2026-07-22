@@ -1,0 +1,152 @@
+{% extends "layout.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="row page-titles">
+    <div class="col-md-5 align-self-center">
+        <h3 class="text-themecolor">Add New User</h3>
+    </div>
+    <div class="col-md-7 align-self-center">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'accounts:manage_users' %}">Users</a></li>
+            <li class="breadcrumb-item active">Add New User</li>
+        </ol>
+    </div>
+    <div class="">
+        <button class="right-side-toggle waves-effect waves-light btn-inverse btn btn-circle btn-sm pull-right m-l-10">
+            <i class="ti-settings text-white"></i>
+        </button>
+    </div>
+</div>
+
+<div class="container-fluid"><form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="row">
+        <div class="col-lg-8 col-md-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    {% if form.errors %}
+                        <div class="alert alert-danger py-2">
+                            <ul class="mb-0 small">
+                                {% for field in form %}
+                                    {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <fieldset>
+                        <legend class="h6 fw-bold text-uppercase border-bottom pb-2 mb-3 text-primary">Personal Details</legend>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">First Name</label>
+                                {% render_field form.first_name class="form-control" %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Last Name</label>
+                                {% render_field form.last_name class="form-control" %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Username</label>
+                                {% render_field form.username class="form-control" %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email Address *</label>
+                                {% if form.instance.pk %}
+                                    {% render_field form.email class="form-control bg-light" readonly="readonly" %}
+                                    <div class="form-text small">Email cannot be changed for existing accounts.</div>
+                                {% else %}
+                                    {% render_field form.email class="form-control" type="email" %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <span class="fw-bold text-uppercase small d-block mb-3">Profile Picture</span>
+                    
+                    {% if form.instance.profile_image %}
+                    <div class="text-center mb-3">
+                        <img src="{{ form.instance.profile_image.url }}" class="rounded shadow-sm border" style="width: 120px; height: 120px; object-fit: cover;">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-2">
+                        {% render_field form.profile_image class="form-control form-control-sm" %}
+                    </div>
+                    <small class="text-muted">Upload a professional headshot.</small>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <span class="fw-bold text-uppercase small d-block mb-3 text-primary">Account Options</span>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Department</label>
+                        {% render_field form.department class="form-select selectpicker" %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Position</label>
+                        {% render_field form.position class="form-select selectpicker" %}
+                    </div>
+
+                    <div class="bg-light p-3 rounded mb-4">
+                        <label class="form-label small fw-bold d-block mb-2">Account Status</label>
+                        <div class="form-check form-switch mb-2">
+                            {% render_field form.is_active class="form-check-input" %}
+                            <label class="form-check-label small" for="{{ form.is_active.id_for_label }}">Active Account</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            {% render_field form.is_staff class="form-check-input" checked=True %}
+                            <label class="form-check-label small" for="{{ form.is_staff.id_for_label }}">Staff Access</label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus me-2"></i> Save User Account
+                        </button>
+                        <a href="{% url 'accounts:manage_users' %}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    jQuery(document).ready(function() {
+        // Handle Username to Slug-like behavior if needed
+        $("#id_username").keyup(function(event){
+            var str = $(this).val();
+            str = str.replace(/\s+/g, '-').toLowerCase();
+            str = str.replace(/[^a-z0-9]/gi, '-');
+            // Useful if you have a hidden slug field
+            $("#id_slug").val(str);
+        });
+
+        // Simple Password Match validation before submit
+        $('#registerForm').on('submit', function() {
+            var p1 = $('#id_password').val();
+            var p2 = $('#id_confirm_password').val();
+            if (p1 !== p2) {
+                alert("Passwords do not match!");
+                return false;
+            }
+            return true;
+        });
+    });
+</script>
+{% endblock %}

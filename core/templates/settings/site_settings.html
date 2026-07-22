@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+{% load widget_tweaks %}
+
+
+{% block subcontent %}
+<div class="container-fluid mt-4">
+    <div class="mb-4">
+            <h4 class="fw-bold text-uppercase mb-0 text-secondary" style="letter-spacing: 0.05em;">
+                Site Configuration Settings
+            </h4>
+            <p class="text-muted">Configure global variables and application behavior.</p>
+</div>
+{% endblock  %}
+
+{% block content %}
+
+    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+
+        <div class="card-body p-0">
+            <form action="{% url 'core:site_settings' %}" method="post">
+                {% csrf_token %}
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr class="text-uppercase small fw-bold text-secondary">
+                                <th class="ps-4" style="width: 25%;">Variable</th>
+                                <th style="width: 35%;">Value</th>
+                                <th class="d-none d-md-table-cell" style="width: 40%;">Description</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in combined_settings_list %}
+                            <tr>
+                                <td class="ps-4">
+                                    <span class="fw-bold text-dark">{{ item.var_name }}</span>
+                                    <div class="d-md-none mt-1">
+                                        {% render_field item.description_field class="form-control form-control-sm border-dashed" placeholder="Description..." %}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    {% render_field item.value_field class="form-control form-control-sm fw-medium" %}
+                                    {% for error in item.value_field.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </td>
+
+                                <td class="d-none d-md-table-cell pe-4">
+                                    {% render_field item.description_field class="form-control form-control-sm" %}
+                                    {% for error in item.description_field.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-light p-3 text-end border-top">
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                        <i class="bi bi-check-circle me-1"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom style for mobile description to distinguish it from the value */
+    .border-dashed {
+        border-style: dashed !important;
+        background-color: #f8f9fa;
+        font-size: 0.75rem;
+    }
+
+    .table td {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .table thead { display: none; } /* Hide header on mobile for a cleaner look */
+        .table tr { border-bottom: 2px solid #eee; }
+        .table td { 
+            display: block; 
+            width: 100% !important; 
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+            border: none;
+        }
+        .table td:first-child { background-color: #fcfcfc; padding-top: 1.25rem; }
+        .table td:last-child { padding-bottom: 1.25rem; }
+    }
+</style>
+{% endblock %}

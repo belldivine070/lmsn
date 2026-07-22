@@ -1,0 +1,180 @@
+{% extends "layout.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% load category_tags %} 
+
+{% block subcontent %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>
+            {% if form.instance.pk %}✏️ Edit Category: <strong>{{ form.instance.name }}</strong>{% else %}✨ Create New Category{% endif %}
+        </h2>
+        <a href="{% url 'core:category_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back 
+        </a>
+    </div>
+{% endblock subcontent %}
+
+{% block content %}
+<div class="container-fluid mt-4"> 
+
+    <form method="post" enctype="multipart/form-data"> 
+        {% csrf_token %}
+        <div class="row">
+
+            {# LEFT COLUMN #}
+            <div class="col-lg-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Category Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            {% render_field form.title class="form-control" placeholder="Title" %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Slug</label>
+                            {% render_field form.slug class="form-control" placeholder="Slug" %}
+                            <small class="form-text text-muted">Auto-generated if left blank.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Excerpt</label>
+                            {% render_field form.excerpt class="form-control" rows="3" placeholder="Description" %}
+                        </div>
+
+                        {% if form.child_fields %}
+                        <div class="form-group p-3 border rounded bg-light">
+                            <label class="h6 d-block mb-3">Post Fields Configuration:</label>
+                            <div class="row">
+                                {% for choice in form.child_fields %}
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="form-check">
+                                        {{ choice.tag }}
+                                        <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# RIGHT COLUMN #}
+            <div class="col-lg-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-success">Category Media</h6>
+                    </div>
+                    <div class="card-body">
+                        
+                        {# 1. Media Preview #}
+                        <div id="media-preview-box" class="mb-3 text-center border rounded p-2 bg-light">
+                            <button type="button" 
+                                    id="remove-media-btn" 
+                                    class="btn btn-danger btn-sm position-absolute {% if not form.instance.media_asset %}d-none{% endif %}" 
+                                    style="top: 5px; right: 5px; z-index: 10;" 
+                                    onclick="clearMediaSelection()" 
+                                    title="Remove Image">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                            <img id="category-img-preview" 
+                                 src="{% if form.instance.media_asset %}{{ form.instance.media_asset.file.url }}{% else %}{% static 'assets/images/placeholder.png' %}{% endif %}" 
+                                 class="img-fluid rounded mb-2" 
+                                 style="max-height: 200px; width: 100%; object-fit: cover;">
+                            <div id="asset-title" class="small text-muted text-truncate">
+                                {% if form.instance.media_asset %}{{ form.instance.media_asset.title }}{% else %}No image selected{% endif %}
+                            </div>
+                        </div>
+
+                        {# 2. Hidden Input for Foreign Key ID #}
+                        <input type="hidden" name="library_asset_id" id="id_library_asset_id" value="{{ form.instance.media_asset.id|default:'' }}">
+
+                        {# 3. Action Buttons #}
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="openMediaPicker()">
+                                <i class="bi bi-images"></i> Browse Library
+                            </button>
+                        </div>
+
+                        <hr>
+
+                        {# Save/Delete Buttons #}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success py-2">
+                                <i class="bi bi-save"></i> Save Category
+                            </button>
+                            
+                            {% if form.instance.pk %}
+                                <a href="{% url 'core:category_delete' slug=form.instance.slug %}" 
+                                   class="btn btn-outline-danger btn-sm"
+                                   onclick="return confirm('Delete this category?');">
+                                    <i class="bi bi-trash"></i> Delete Category
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+function openMediaPicker() {
+    // Opens library in Picker mode
+    const url = "{% url 'core:media_picker' %}?type=picker";
+    window.open(url, "MediaPicker", "width=1100,height=700,status=no,menubar=no,toolbar=no");
+}
+
+/**
+ * Called by the Media Library Popup
+ * @param {string} url - The URL of the file (for preview)
+ * @param {number} id - The Database ID (for the Foreign Key)
+ */
+function handleVisualSelection(url, id) {
+    // 1. Update the image preview
+    const previewImg = document.getElementById('category-img-preview');
+    previewImg.src = url;
+    
+    // 2. Update the hidden input with the ID (to be saved as Foreign Key)
+    document.getElementById('id_library_asset_id').value = id;
+    
+    // 3. Clear manual file upload if it was filled
+    document.getElementById('id_media_asset').value = '';
+
+    // 4. Optional: Update text
+    document.getElementById('asset-title').innerText = "Selected Asset ID: " + id;
+}
+
+// 1. Function to CLEAR the image (Make it empty)
+function clearMediaSelection() {
+    // Reset the preview to placeholder
+    document.getElementById('category-img-preview').src = "{% static 'assets/images/placeholder.png' %}";
+    // Set the hidden input to empty string (Django view will see this as None)
+    document.getElementById('id_library_asset_id').value = "";
+    // Update text
+    document.getElementById('asset-title').innerText = "No image selected";
+    // Hide the remove button
+    document.getElementById('remove-media-btn').classList.add('d-none');
+}
+
+// 2. Function called when an image is clicked INSIDE your Modal
+function handleVisualSelection(url, id, title) {
+    document.getElementById('category-img-preview').src = url;
+    document.getElementById('id_library_asset_id').value = id;
+    document.getElementById('asset-title').innerText = title || "Selected Asset: " + id;
+    
+    // Show the remove button now that we have an image
+    document.getElementById('remove-media-btn').classList.remove('d-none');
+
+    // If using a Bootstrap Modal, close it after selection
+    var myModalEl = document.getElementById('mediaLibraryModal');
+    var modal = bootstrap.Modal.getInstance(myModalEl);
+    if(modal) modal.hide();
+}
+</script>
+{% endblock content %}

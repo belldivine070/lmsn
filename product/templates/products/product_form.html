@@ -1,0 +1,807 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <form method="post" id="product-form" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if form.errors or inventory_formset.errors or variant_formset.errors %}
+            <div class="alert alert-danger shadow-sm border-start border-4 border-danger">
+                <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following errors:</h6>
+                <div class="small">
+                    {{ form.errors }}
+                    {{ inventory_formset.errors }}
+                    {{ variant_formset.errors }}
+                </div>
+            </div>
+        {% endif %}
+        
+        <div id="management-forms">
+            {{ inventory_formset.management_form }}
+            {{ variant_formset.management_form }}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded sticky-top" style="top: 20px; z-index: 1020;">
+            <div>
+                <h4 class="fw-bold mb-0 text-dark">{% if object %}Edit{% else %}Add{% endif %} Product</h4>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0" style="font-size: 0.8rem;">
+                        <li class="breadcrumb-item"><a href="{% url 'products:all_products' %}">Products</a></li>
+                        <li class="breadcrumb-item active">{% if object %}Edit{% else %}New{% endif %}</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'products:all_products' %}" class="btn btn-light border px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary px-4 shadow-sm" style="background-color: #6156ce; border: none;">
+                    <i class="bi bi-check2-circle me-1"></i> Save Product
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3 border-bottom pb-2 text-primary">Basic Information</h5>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-muted">Product Name</label>
+                                {{ form.name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted">Product Type</label>
+                                {{ form.product_type }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted">UOM</label>
+                                {{ form.uom }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-muted">Short Description</label>
+                                {{ form.short_description }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-muted">Full Description</label>
+                                {{ form.description }}
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="fw-bold mb-3 border-bottom pb-2 text-primary">Pricing & Promotions</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-muted">Cost Price</label>
+                                        {{ form.cost_price }}
+                                        <div class="form-text" style="font-size: 0.7rem;">What you paid for the item</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-muted">Old Price (RRP)</label>
+                                        {{ form.old_price }}
+                                        <div class="form-text" style="font-size: 0.7rem;">Original retail price</div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-muted">Selling Price</label>
+                                        {{ form.selling_price }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small text-muted">Discount (%)</label>
+                                        <div class="input-group">
+                                            {{ form.discount }}
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 mt-3">
+                                        <div class="p-3 bg-light rounded border">
+                                            <div class="form-check form-switch mb-3">
+                                                {{ form.is_sales }}
+                                                <label class="form-check-label fw-bold small ms-2">Mark as "On Sale"</label>
+                                            </div>
+                                            <div class="row g-2">
+                                                <div class="col-md-6">
+                                                    <label class="small fw-bold text-muted">Sale Start Date</label>
+                                                    {{ form.sale_start }}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="small fw-bold text-muted">Sale End Date</label>
+                                                    {{ form.sale_end }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-body">
+                                <h5 class="fw-bold mb-3 border-bottom pb-2 text-primary">Select colors & sizes available for this product</h5>
+                                <div class="row g-3">
+                                    <div class="row">
+                                        <!-- Color Selection -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="small fw-bold text-muted d-block mb-2">Available Colors</label>
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center" 
+                                                        type="button" id="colorDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                                    <span class="selected-label">Select colors</span>
+                                                </button>
+
+                                                <ul class="dropdown-menu w-100 shadow-sm p-3" aria-labelledby="colorDropdown" style="max-height: 250px; overflow-y: auto;">
+                                                    {% for color in form.fields.colors.queryset %}
+                                                    <li class="mb-2">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input color-checkbox" type="checkbox" name="colors" value="{{ color.pk }}" id="color_{{ color.pk }}"
+                                                                {% if color.pk in form.colors.value %}checked{% endif %}>
+                                                            <label class="form-check-label d-flex align-items-center" for="color_{{ color.pk }}">
+                                                                {% if color.code %}
+                                                                <span class="me-2" style="width: 15px; height: 15px; border-radius: 50%; background-color: {{ color.code }}; border: 1px solid #ddd;"></span>
+                                                                {% endif %}
+                                                                {{ color.name }}
+                                                            </label>
+                                                        </div>
+                                                    </li>
+                                                    {% empty %}
+                                                    <li class="text-muted small ps-2">No colors found in database.</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <!-- Size Selection -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="small fw-bold text-muted d-block mb-2">Available Sizes</label>
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center" 
+                                                        type="button" id="sizeDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                                    <span class="selected-label">Select sizes</span>
+                                                </button>
+
+                                                <ul class="dropdown-menu w-100 shadow-sm p-3" aria-labelledby="sizeDropdown" style="max-height: 250px; overflow-y: auto;">
+                                                    {% for size in form.fields.sizes.queryset %}
+                                                    <li class="mb-2">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input size-checkbox" type="checkbox" name="sizes" value="{{ size.pk }}" id="size_{{ size.pk }}"
+                                                                {% if size.pk in form.sizes.value %}checked{% endif %}>
+                                                            <label class="form-check-label" for="size_{{ size.pk }}">
+                                                                {{ size.name }}
+                                                            </label>
+                                                        </div>
+                                                    </li>
+                                                    {% empty %}
+                                                    <li class="text-muted small ps-2">No sizes found in database.</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span>This will be display on the UI for customers to choose </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="simple-inventory-section" class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3 border-bottom pb-2">Stock & Pricing</h5>
+                        {% for i_form in inventory_formset %}
+                            <div class="row g-3">
+                                {% for hidden in i_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <div class="col-md-6">
+                                    <label class="small fw-bold text-muted">SKU</label>{{ i_form.sku }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small fw-bold text-muted">Barcode</label>{{ i_form.barcode }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small fw-bold text-muted">Barcode Type</label>{{ i_form.barcode_type }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small fw-bold text-muted">Stock Qty</label>{{ i_form.quantity }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small fw-bold text-muted">Low Stock Alert</label>{{ i_form.low_stock_threshold }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div id="variable-section" class="card border-0 shadow-sm mb-4 d-none">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                            <h5 class="fw-bold mb-0">Variants</h5>
+                            <button type="button" id="add-variant-btn" class="btn btn-sm btn-dark">
+                                <i class="bi bi-plus-lg me-1"></i> Add New Variant
+                            </button>
+                        </div>
+                        
+                        <div id="variant-rows-container">
+                            {% for v_form in variant_formset %}
+                            <div class="variant-item border rounded p-3 mb-3 bg-white position-relative shadow-sm">
+                                {% for hidden in v_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                
+                                <div class="d-none variant-details-field-wrapper">
+                                    {{ v_form.variant_details }}
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-4 border-end">
+                                        <label class="small fw-bold text-muted d-block mb-2">Configuration</label>
+                                        <div class="mb-2">
+                                            <label class="small text-muted">Color</label>
+                                            {{ v_form.color }}
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="small text-muted">Size</label>
+                                            {{ v_form.size }}
+                                        </div>
+                                        <div class="form-check form-switch mt-3">
+                                            {{ v_form.is_active }}
+                                            <label class="small fw-bold ms-1">Active</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="row g-2">
+                                                <div class="col-6"><label class="small fw-bold">SKU</label>{{ v_form.sku }}</div>
+                                                <div class="col-6"><label class="small fw-bold">Barcode</label>{{ v_form.barcode }}</div>
+                                                <div class="col-6"><label class="small fw-bold">Type</label>{{ v_form.barcode_type }}</div>
+                                                <div class="col-6"><label class="small fw-bold">Qty</label>{{ v_form.quantity }}</div>
+                                                <div class="col-6"><label class="small fw-bold">Alert Threshold</label>{{ v_form.low_stock_threshold }}</div>
+                                                <div class="col-6"><label class="small fw-bold">Weight</label>{{ v_form.weight }}</div>
+                                                <div class="col-12"><label class="small fw-bold">Price</label>{{ v_form.price_override }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="position-absolute top-0 end-0 p-2">
+                                    <div class="d-none">{{ v_form.DELETE }}</div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="instantDeleteRow(this, '.variant-item')">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 border-bottom pb-2">Product Assets</h6>
+
+                        <div class="mb-4">
+                            <label class="small fw-bold">Primary Media</label>
+                            <div id="primary-preview" class="media-box border rounded bg-light mb-2 d-flex align-items-center justify-content-center position-relative" style="height: 180px; overflow: hidden;">
+                                {% if object.is_primary %}
+                                    <button type="button" 
+                                            class="btn btn-danger btn-sm position-absolute" 
+                                            style="top: 8px; right: 8px; z-index: 10; width: 28px; height: 28px; padding: 0; line-height: 1;" 
+                                            onclick="clearMediaSelection('primary')"
+                                            title="Remove Media">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                    
+                                    {% if ".mp4" in object.is_primary.file.url|lower or ".mov" in object.is_primary.file.url|lower or ".webm" in object.is_primary.file.url|lower %}
+                                        <video src="{{ object.is_primary.file.url }}" 
+                                            class="h-100 w-100 object-fit-contain clickable-video" 
+                                            autoplay muted loop playsinline 
+                                            title="Click to unmute and seek"
+                                            onclick="enableVideoControls(this)"></video>
+                                        <button type="button" class="btn btn-sm btn-dark position-absolute bottom-0 end-0 m-2 opacity-75" onclick="expandVideo('primary-preview')" title="Fullscreen">
+                                            <i class="bi bi-arrows-fullscreen"></i>
+                                        </button>
+                                    {% else %}
+                                        <img src="{{ object.is_primary.file.url }}" class="h-100 w-100 object-fit-contain">
+                                    {% endif %}
+                                {% else %}
+                                    <i class="bi bi-camera text-muted fs-2"></i>
+                                {% endif %}
+                            </div>
+                            <input type="hidden" name="is_primary_id" id="id_is_primary_id" value="{{ object.is_primary.id|default:'' }}">
+                            <button type="button" class="btn btn-sm btn-outline-dark w-100" onclick="openPicker('primary')">Select Primary</button>                           
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="small fw-bold">Secondary Media</label>
+                            <div id="secondary-preview" class="media-box border rounded bg-light mb-2 d-flex align-items-center justify-content-center position-relative" style="height: 120px; overflow: hidden;">
+                                {% if object.is_secondary %}
+                                    <button type="button" 
+                                            class="btn btn-danger btn-sm position-absolute" 
+                                            style="top: 8px; right: 8px; z-index: 10; width: 28px; height: 28px; padding: 0;" 
+                                            onclick="clearMediaSelection('secondary')">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                    
+                                    {% if ".mp4" in object.is_secondary.file.url|lower or ".mov" in object.is_secondary.file.url|lower or ".webm" in object.is_secondary.file.url|lower %}
+                                        <video src="{{ object.is_secondary.file.url }}" 
+                                            class="h-100 w-100 object-fit-contain clickable-video" 
+                                            autoplay muted loop playsinline 
+                                            onclick="enableVideoControls(this)"></video>
+                                    {% else %}
+                                        <img src="{{ object.is_secondary.file.url }}" class="h-100 w-100 object-fit-contain">
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted small">None</span>
+                                {% endif %}
+                            </div>
+                            <input type="hidden" name="is_secondary_id" id="id_is_secondary_id" value="{{ object.is_secondary.id|default:'' }}">
+                            <button type="button" class="btn btn-sm btn-outline-dark w-100" onclick="openPicker('secondary')">Select Secondary</button>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="small fw-bold">Gallery</label>
+                            <div id="gallery-container" class="row g-2 mb-2">
+                                {% for asset in object.gallery.all %}
+                                <div class="col-4 gallery-item">
+                                    <div class="position-relative border rounded overflow-hidden" style="height: 80px;">
+                                        {% if ".mp4" in asset.file.url|lower or ".mov" in asset.file.url|lower or ".webm" in asset.file.url|lower %}
+                                            <video src="{{ asset.file.url }}" 
+                                                class="w-100 h-100 object-fit-cover clickable-video" 
+                                                muted autoplay loop playsinline 
+                                                onclick="enableVideoControls(this)"></video>
+                                        {% else %}
+                                            <img src="{{ asset.file.url }}" class="w-100 h-100 object-fit-cover">
+                                        {% endif %}
+                                        <input type="hidden" name="gallery_asset_ids" value="{{ asset.id }}">
+                                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 p-0 px-1" style="z-index: 10;" onclick="this.closest('.gallery-item').remove()">×</button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="openPicker('gallery')">+ Add Bulk Media</button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 border-bottom pb-2">Catalog Settings</h6>
+                        <div class="mb-3">
+                            <label class="small fw-bold text-muted">Category</label>{{ form.category }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="small fw-bold text-muted">Brand</label>{{ form.brand }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="small fw-bold text-muted">Supplier</label>{{ form.supplier }}
+                        </div>
+                        <div class="form-check form-switch mb-2">
+                            {{ form.is_active }} <label class="small fw-bold ms-1">Active on Store</label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            {{ form.is_featured }} <label class="small fw-bold ms-1">Featured Product</label>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <label class="small fw-bold text-muted">Tags</label>{{ form.tags }}
+                            <div class="form-text mt-1" style="font-size: 0.7rem;">Comma separated (e.g. organic, gluten-free)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<!-- NEW TEMPLATE: Uses Django's empty_form for perfect ID matching -->
+<template id="variant-template">
+    <div class="variant-item border rounded p-3 mb-3 bg-white position-relative shadow-sm">
+        {% for hidden in variant_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+        <div class="row g-3">
+            <div class="col-md-4 border-end">
+                <label class="small fw-bold text-muted d-block mb-2">Configuration</label>
+                <div class="mb-2"><label class="small">Color</label>{{ variant_formset.empty_form.color }}</div>
+                <div class="mb-2"><label class="small">Size</label>{{ variant_formset.empty_form.size }}</div>
+                <div class="form-check form-switch mt-3">
+                    {{ variant_formset.empty_form.is_active }}<label class="small fw-bold ms-1">Active</label>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="row g-2">
+                    <div class="col-6"><label class="small fw-bold">SKU</label>{{ variant_formset.empty_form.sku }}</div>
+                    <div class="col-6"><label class="small fw-bold">Barcode</label>{{ variant_formset.empty_form.barcode }}</div>
+                    <div class="col-6"><label class="small fw-bold">Type</label>{{ variant_formset.empty_form.barcode_type }}</div>
+                    <div class="col-6"><label class="small fw-bold">Qty</label>{{ variant_formset.empty_form.quantity }}</div>
+                    <div class="col-6"><label class="small fw-bold">Low Stock Threshold</label>{{ variant_formset.empty_form.low_stock_threshold }}</div>
+                    <div class="col-6"><label class="small fw-bold">Weight</label>{{ variant_formset.empty_form.weight }}</div>
+                    <div class="col-12"><label class="small fw-bold">Price Override</label>{{ variant_formset.empty_form.price_override }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="position-absolute top-0 end-0 p-2">
+            <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="instantDeleteRow(this, '.variant-item')">
+                <i class="bi bi-trash-fill"></i>
+            </button>
+        </div>
+    </div>
+</template>
+
+
+<script>
+    
+/** 1. PRODUCT TYPE TOGGLE **/
+function toggleProductType() {
+    const typeField = document.querySelector('[name="product_type"]');
+    if (!typeField) return;
+    
+    const type = typeField.value.toLowerCase();
+    const varSection = document.getElementById('variable-section');
+    const simpleSection = document.getElementById('simple-inventory-section');
+
+    if (type === 'variable') {
+        varSection.classList.remove('d-none');
+        simpleSection.classList.add('d-none');
+    } else {
+        varSection.classList.add('d-none');
+        simpleSection.classList.remove('d-none');
+    }
+}
+
+/** 2. ADD NEW VARIANT **/
+document.getElementById('add-variant-btn').addEventListener('click', function() {
+    const container = document.getElementById('variant-rows-container');
+    const totalForms = document.getElementById('id_var-TOTAL_FORMS'); // Ensure prefix matches Django
+    const count = parseInt(totalForms.value);
+    
+    let template = document.getElementById('variant-template').innerHTML;
+    template = template.replace(/__prefix__/g, count);
+    
+    container.insertAdjacentHTML('beforeend', template);
+    totalForms.value = count + 1;
+});
+
+/** 3. DYNAMIC ATTRIBUTE ROWS **/
+function addAttrRow(idx, name = '', value = '') {
+    const container = document.getElementById(`attr-container-${idx}`);
+    const rowId = Date.now() + Math.random(); // Unique ID for this specific row instance
+    
+    const row = `
+        <div class="row g-1 mb-1 attr-row">
+            <div class="col-5"><input type="text" name="attr_name_${idx}[]" class="form-control form-control-sm attr-name" value="${name}" placeholder="Name"></div>
+            <div class="col-5"><input type="text" name="attr_value_${idx}[]" class="form-control form-control-sm attr-value" value="${value}" placeholder="Value"></div>
+            <div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="this.closest('.row').remove()">&times;</button></div>
+        </div>`;
+    container.insertAdjacentHTML('beforeend', row);
+}
+
+/** 4. INITIALIZE ATTRIBUTES FROM STRING (Edit Mode) **/
+function initExistingAttributes() {
+    document.querySelectorAll('.variant-item').forEach((item, idx) => {
+        const detailsInput = item.querySelector('input[name$="-variant_details"]');
+        const container = item.querySelector('.attr-group');
+        const loopIdx = container.dataset.idx;
+
+        if (detailsInput && detailsInput.value.trim() !== '') {
+            // Split "Color: Red, Size: XL" into parts
+            const parts = detailsInput.value.split(',');
+            parts.forEach(part => {
+                const [k, v] = part.split(':').map(s => s.trim());
+                if (k && v) addAttrRow(loopIdx, k, v);
+            });
+        } else {
+            // Add one empty row if none exists
+            addAttrRow(loopIdx);
+        }
+    });
+}
+
+/** 5. FORM SUBMISSION - STITCH ATTRIBUTES **/
+document.getElementById('product-form').addEventListener('submit', function(e) {
+    const type = document.querySelector('[name="product_type"]').value.toLowerCase();
+    if (type !== 'variable') return;
+
+    document.querySelectorAll('.variant-item').forEach((row) => {
+        const names = row.querySelectorAll('.attr-name');
+        const values = row.querySelectorAll('.attr-value');
+        let details = [];
+
+        names.forEach((nameInput, i) => {
+            if (nameInput.value.trim() !== '' && values[i].value.trim() !== '') {
+                details.push(`${nameInput.value.trim()}: ${values[i].value.trim()}`);
+            }
+        });
+
+        const target = row.querySelector('input[name$="-variant_details"]');
+        if (target) {
+            target.value = details.join(', ');
+        }
+    });
+});
+
+/** 6. DELETE ROW **/
+{% comment %} function instantDeleteRow(btn, selector) {
+    const row = btn.closest(selector);
+    const deleteInput = row.querySelector('input[name$="-DELETE"]');
+    if (deleteInput) {
+        deleteInput.checked = true;
+        row.style.display = 'none';
+    } else {
+        row.remove();
+    }
+} {% endcomment %}
+
+/** 6. UPDATED DELETE ROW (MANAGEMENT FORM SYNC) **/
+function instantDeleteRow(btn, selector) {
+    const row = btn.closest(selector);
+    const totalForms = document.getElementById('id_var-TOTAL_FORMS');
+    
+    // Check if the row has a hidden DELETE input (provided by Django for existing records)
+    const deleteInput = row.querySelector('input[name$="-DELETE"]');
+
+    if (deleteInput) {
+        // This is an existing database record
+        deleteInput.checked = true;
+        row.style.display = 'none';
+    } else {
+        // This is a newly added row that hasn't been saved yet
+        row.remove();
+        // Update the TOTAL_FORMS count so the next added row has the correct index
+        if (totalForms) {
+            let count = parseInt(totalForms.value);
+            totalForms.value = count - 1;
+        }
+    }
+}
+
+/** 7. INIT **/
+document.addEventListener('DOMContentLoaded', () => {
+    const typeField = document.querySelector('[name="product_type"]');
+    if (typeField) {
+        typeField.addEventListener('change', toggleProductType);
+        toggleProductType();
+    }
+    initExistingAttributes();
+});
+
+/** 8. HYBRID PRICING CALCULATOR **/
+function initPriceCalculator() {
+    const oldPriceInput = document.querySelector('[name="old_price"]');
+    const sellingPriceInput = document.querySelector('[name="selling_price"]');
+    const discountInput = document.querySelector('[name="discount"]');
+    const isSalesCheckbox = document.querySelector('[name="is_sales"]');
+
+    function calculate(e) {
+        const oldP = parseFloat(oldPriceInput.value) || 0;
+        const sellP = parseFloat(sellingPriceInput.value) || 0;
+        const disc = parseFloat(discountInput.value) || 0;
+
+        if (e.target === discountInput) {
+            // Case 1: User types in Discount % -> Update Selling Price
+            if (oldP > 0) {
+                const newSellP = oldP - (oldP * (disc / 100));
+                sellingPriceInput.value = newSellP.toFixed(2);
+            }
+        } 
+        else if (e.target === sellingPriceInput || e.target === oldPriceInput) {
+            // Case 2: User types in Selling Price or Old Price -> Update Discount %
+            if (oldP > 0 && sellP < oldP) {
+                const calculatedDisc = ((oldP - sellP) / oldP) * 100;
+                discountInput.value = Math.round(calculatedDisc);
+            } else if (sellP >= oldP) {
+                discountInput.value = 0;
+            }
+        }
+
+        // Auto-toggle the "On Sale" switch
+        if (parseFloat(discountInput.value) > 0) {
+            isSalesCheckbox.checked = true;
+        } else {
+            isSalesCheckbox.checked = false;
+        }
+    }
+
+    [oldPriceInput, sellingPriceInput, discountInput].forEach(el => {
+        if (el) el.addEventListener('input', calculate);
+    });
+}
+
+// Call this inside your DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    // ... existing inits (toggleProductType, etc.)
+    initPriceCalculator();
+});
+
+
+
+
+/** 9. MEDIA PICKER INTEGRATION **/
+let activeTarget = '';
+
+// We attach this to window so the popup can ALWAYS find it
+window.openPicker = function(target) {
+    activeTarget = target;
+    // Ensure the URL matches your Django URL configuration
+    const isBulk = (target === 'gallery') ? '&mode=bulk' : '';
+    const url = "{% url 'core:media_picker' %}?type=picker&target=" + target + isBulk;
+    window.open(url, "MediaPicker", "width=1100,height=700");
+}
+/**
+ * Handle incoming selections
+ */
+window.handleVisualSelection = function(url, id, title = '', target = '') {
+    const finalTarget = target || activeTarget;
+    const urlList = Array.isArray(url) ? url : [url];
+    const idList = Array.isArray(id) ? id : [id];
+
+    if (finalTarget === 'gallery') {
+        const container = document.getElementById('gallery-container');
+        if (container) {
+            urlList.forEach((u, i) => {
+                const markup = `
+                    <div class="col-4 gallery-item mb-2">
+                        <div class="position-relative border rounded overflow-hidden" style="height: 80px;">
+                            ${generateMediaMarkup(u, true)}
+                            <input type="hidden" name="gallery_asset_ids" value="${idList[i]}">
+                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 p-0 px-1" 
+                                    style="z-index: 10;" onclick="this.closest('.gallery-item').remove()">×</button>
+                        </div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', markup);
+            });
+        }
+    } else {
+        const input = document.getElementById(`id_is_${finalTarget}_id`);
+        const previewDiv = document.getElementById(`${finalTarget}-preview`);
+        
+        if (input && previewDiv) {
+            input.value = idList[0];
+            // Inject the Red "X" button along with the media
+            previewDiv.innerHTML = `
+                <button type="button" 
+                        class="btn btn-danger btn-sm position-absolute" 
+                        style="top: 8px; right: 8px; z-index: 10; width: 28px; height: 28px; padding: 0; line-height: 1;" 
+                        onclick="clearMediaSelection('${finalTarget}')">
+                    <i class="bi bi-x"></i>
+                </button>
+                ${generateMediaMarkup(urlList[0], false)}`;
+        }
+    }
+}
+
+/**
+ * Clear Media Function (Renamed to match your HTML)
+ */
+window.clearMediaSelection = function(target) {
+    const hiddenInput = document.getElementById(`id_is_${target}_id`);
+    const previewBox = document.getElementById(`${target}-preview`);
+    
+    if (hiddenInput) hiddenInput.value = '';
+    
+    if (previewBox) {
+        previewBox.innerHTML = `
+            <div class="text-center">
+                <i class="bi bi-camera text-muted fs-2"></i>
+                <p class="text-muted small mb-0">No Media Selected</p>
+            </div>`;
+    }
+}
+
+/**
+ * Creates the HTML for either an image or a muted autoplaying video
+ */
+function generateMediaMarkup(url, isGallery = false) {
+    const isVideo = url.match(/\.(mp4|webm|mov|ogg)$/i);
+    // Professional styling: object-fit cover for gallery, contain for main previews
+    const css = isGallery ? "w-100 h-100 object-fit-cover clickable-video" : "h-100 w-100 object-fit-contain clickable-video";
+    
+    if (isVideo) {
+        return `<video src="${url}" class="${css}" autoplay muted loop playsinline onclick="enableVideoControls(this)"></video>`;
+    }
+    return `<img src="${url}" class="${css}">`;
+}
+
+/**
+ * Video Helpers
+ */
+window.enableVideoControls = function(video) {
+    video.controls = true;
+    video.muted = false;
+    video.classList.remove('clickable-video');
+}
+
+window.expandVideo = function(containerId) {
+    const v = document.querySelector(`#${containerId} video`);
+    if (v) {
+        if (v.requestFullscreen) v.requestFullscreen();
+        else if (v.webkitRequestFullscreen) v.webkitRequestFullscreen();
+        enableVideoControls(v);
+    }
+}
+
+
+/***
+    This is to diaply number of colors / sizes selected 
+***/
+document.addEventListener('DOMContentLoaded', function() {
+    function updateDropdownLabel(dropdownId, checkboxClass, defaultText) {
+        const dropdown = document.getElementById(dropdownId);
+        const label = dropdown.querySelector('.selected-label');
+        
+        function refresh() {
+            const checkedCount = document.querySelectorAll(`.${checkboxClass}:checked`).length;
+            if (checkedCount === 0) {
+                label.textContent = defaultText;
+            } else if (checkedCount === 1) {
+                // Show the name of the single selected item
+                const firstChecked = document.querySelector(`.${checkboxClass}:checked`);
+                label.textContent = firstChecked.nextElementSibling.textContent.trim();
+            } else {
+                label.textContent = `${checkedCount} items selected`;
+            }
+        }
+
+        // Run once on load for prepopulated forms
+        refresh();
+
+        // Listen for changes
+        document.querySelectorAll(`.${checkboxClass}`).forEach(box => {
+            box.addEventListener('change', refresh);
+        });
+    }
+
+    // Initialize both dropdowns
+    updateDropdownLabel('colorDropdown', 'color-checkbox', 'Select colors');
+    updateDropdownLabel('sizeDropdown', 'size-checkbox', 'Select sizes');
+});
+
+/** 10. SYNC MASTER LIST TO VARIANT DROPDOWNS **/
+function syncMasterToVariants() {
+    const updateDropdowns = (checkboxClass, dropdownSuffix) => {
+        const selectedOptions = [];
+        // Get all checked items from Master List
+        document.querySelectorAll(`.${checkboxClass}:checked`).forEach(cb => {
+            selectedOptions.push({
+                id: cb.value,
+                name: cb.nextElementSibling.textContent.trim()
+            });
+        });
+
+        // Find every variant dropdown matching this type (color or size)
+        document.querySelectorAll(`select[id$="-${dropdownSuffix}"]`).forEach(select => {
+            const currentVal = select.value; // Save current selection
+            select.innerHTML = '<option value="">---------</option>';
+            
+            selectedOptions.forEach(opt => {
+                const isSelected = opt.id === currentVal ? 'selected' : '';
+                select.insertAdjacentHTML('beforeend', `<option value="${opt.id}" ${isSelected}>${opt.name}</option>`);
+            });
+        });
+    };
+
+    // Listen for Master List changes
+    document.addEventListener('change', (e) => {
+        if (e.target.classList.contains('color-checkbox')) updateDropdowns('color-checkbox', 'color');
+        if (e.target.classList.contains('size-checkbox')) updateDropdowns('size-checkbox', 'size');
+    });
+}
+
+// Call this in your DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    syncMasterToVariants();
+});
+
+
+</script>
+
+<style>
+    /* Styling for better UI depth */
+    .card { transition: box-shadow 0.2s; }
+    .form-control:focus, .form-select:focus {
+        border-color: #6156ce;
+        box-shadow: 0 0 0 0.2rem rgba(97, 86, 206, 0.15);
+    }
+    .sticky-top { transition: all 0.3s ease; }
+    .variant-item:hover { border-color: #6156ce !important; }
+</style>
+
+{% endblock %}
+

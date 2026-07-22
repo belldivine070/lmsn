@@ -1,0 +1,347 @@
+{% extends 'layout.html' %}
+
+{% block subcontent %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'products:category_list' %}">Categories</a>
+                </li>
+                {% if category %}
+                    <li class="breadcrumb-item active">{{ category.name }}</li>
+                {% else %}
+                    <li class="breadcrumb-item active">All Products</li>
+                {% endif %}
+            </ol>
+        </nav>
+        <h4 class="fw-bold mb-0">
+            {% if category %} Products in "{{ category.name }}" {% else %} All Products {% endif %}
+        </h4>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<div class="container-fluid mt-3">
+
+    <!-- Top Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <!-- Search -->
+        <div class="input-group shadow-sm search-box">
+            <span class="input-group-text bg-white border-0">
+                <i class="bi bi-search text-muted"></i>
+            </span>
+            <input type="text"
+                   id="ajax-search-input"
+                   class="form-control border-0 shadow-none"
+                   placeholder="Search products...">
+        </div>
+
+        <!-- Add Button (RIGHT END) -->
+        <a href="{% url 'products:product_create' %}{% if category %}?category={{ category.id }}{% endif %}"
+           class="btn btn-primary px-4 shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> Add Product
+        </a>
+
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" id="product-table">
+
+                    <thead class="bg-light">
+                        <tr class="text-muted small text-uppercase">
+                            <th class="ps-4">Product</th>
+                            <th>SKU / Barcode</th>
+                            <th>Stock</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="product-table-body">
+                        {% for product in products %}
+                        <tr id="product-row-{{ product.id }}" class="table-row">
+
+                            <!-- Product -->
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    
+                                    <!-- Image -->
+                                    <div>
+                                        {% if product.is_primary %}
+                                            {% if product.is_primary.file.url|lower|slice:"-4:" == ".mp4" or product.is_primary.file.url|lower|slice:"-4:" == ".mov" %}
+                                                <div class="media-box bg-dark text-white">
+                                                    <i class="bi bi-play-fill"></i>
+                                                </div>
+                                            {% else %}
+                                                <img src="{{ product.is_primary.file.url }}" class="media-img">
+                                            {% endif %}
+                                        {% else %}
+                                            <div class="media-box bg-light text-muted">
+                                                <i class="bi bi-box"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Info -->
+                                    <div>
+                                        <div class="fw-semibold">{{ product.name }}</div>
+                                        <small class="text-muted">{{ product.get_uom_display }}</small>
+                                    </div>
+
+                                </div>
+                            </td>
+
+                            <!-- SKU -->
+                            <td>
+                                {% with inv=product.inventory_records.first %}
+                                    <div class="fw-semibold small">{{ inv.sku|default:"N/A" }}</div>
+                                    <small class="text-muted">{{ inv.barcode|default:"No Barcode" }}</small>
+                                {% endwith %}
+                            </td>
+
+                            <!-- Stock -->
+                            <td>
+                                {% with inv=product.inventory_records.first %}
+                                    {% if not inv or inv.current_status == 'out' %}
+                                        <span class="badge bg-danger-subtle text-danger">Out of Stock</span>
+                                    {% elif inv.current_status == 'low' %}
+                                        <span class="badge bg-warning-subtle text-dark">
+                                            {{ inv.quantity }} Low
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success-subtle text-success">
+                                            {{ inv.quantity }} in stock
+                                        </span>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="{% url 'products:product_update' product.pk %}"
+                                       class="btn btn-sm btn-light border">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button"
+                                            class="btn btn-sm btn-light border text-danger"
+                                            onclick="deleteProduct({{ product.id }}, '{% url 'products:product_delete' product.pk %}', '{{ product.name|escapejs }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                No products found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styling -->
+<style>
+/* Search box */
+.search-box {
+    max-width: 320px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Remove borders (top, right, left) */
+.search-box input {
+    border-top: none !important;
+    border-right: none !important;
+    border-left: none !important;
+}
+
+/* Media */
+.media-img {
+    width: 45px;
+    height: 45px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.media-box {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+/* Table row hover */
+.table-row {
+    transition: all 0.2s ease;
+}
+
+.table-row:hover {
+    background: #f8f9fa;
+}
+
+/* Badge soft styles */
+.bg-success-subtle {
+    background: #e6f4ea;
+}
+
+.bg-danger-subtle {
+    background: #fdeaea;
+}
+
+.bg-warning-subtle {
+    background: #fff4e5;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('ajax-search-input');
+    const tableBody = document.getElementById('product-table-body');
+    const table = document.getElementById('product-table');
+    let debounceTimer;
+
+    // Search with Debounce
+    searchInput.addEventListener('input', function(e) {
+        clearTimeout(debounceTimer);
+        
+        // Visual feedback that search is happening
+        table.style.opacity = '0.5';
+        
+        debounceTimer = setTimeout(() => {
+            const query = e.target.value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('q', query);
+
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                renderProducts(data.products);
+                window.history.replaceState(null, '', url);
+                table.style.opacity = '1';
+            })
+            .catch(err => {
+                console.error("Search failed:", err);
+                table.style.opacity = '1';
+            });
+        }, 300);
+    });
+
+    // Handle AJAX Deletion
+    window.deleteProduct = function(productId, deleteUrl, productName) {
+        if (!confirm(`Are you sure you want to delete "${productName}"?`)) return;
+
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(deleteUrl, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const row = document.getElementById(`product-row-${productId}`);
+                if (row) {
+                    row.style.transition = 'all 0.4s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(20px)';
+                    setTimeout(() => row.remove(), 400);
+                }
+            } else {
+                alert("Error: " + (data.message || "Could not delete product."));
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    };
+
+    function renderProducts(products) {
+        tableBody.innerHTML = '';
+
+        if (products.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-5 text-muted">No products match your search.</td></tr>`;
+            return;
+        }
+
+        products.forEach(product => {
+            // Stock Badge Logic
+            let stockBadge = '';
+            if (product.status === 'out') {
+                stockBadge = `<span class="badge bg-danger">Out of Stock</span>`;
+            } else if (product.status === 'low') {
+                stockBadge = `<span class="badge bg-warning text-dark">${product.quantity} - Low Stock</span>`;
+            } else {
+                stockBadge = `<span class="badge bg-success">${product.quantity} in stock</span>`;
+            }
+
+            // Media Handling Logic (Images vs Videos)
+            let mediaHtml = '';
+            if (product.image_url) {
+                const isVideo = product.image_url.toLowerCase().endsWith('.mp4') || product.image_url.toLowerCase().endsWith('.mov');
+                if (isVideo) {
+                    mediaHtml = `<div class="rounded bg-dark d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;"><i class="bi bi-play-circle-fill text-white"></i></div>`;
+                } else {
+                    mediaHtml = `<img src="${product.image_url}" class="rounded" style="width: 45px; height: 45px; object-fit: cover;">`;
+                }
+            } else {
+                mediaHtml = `<div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;"><i class="bi bi-box text-muted"></i></div>`;
+            }
+
+            const row = `
+                <tr id="product-row-${product.id}">
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">${mediaHtml}</div>
+                            <div>
+                                <div class="fw-bold text-dark">${product.name}</div>
+                                <small class="text-muted">${product.uom}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="small fw-bold">${product.sku}</div>
+                        <div class="text-muted smaller">${product.barcode}</div>
+                    </td>
+                    <td>${stockBadge}</td>
+                    <td class="text-end pe-4">
+                        <div class="btn-group">
+                            <a href="${product.update_url}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-danger" 
+                                    onclick="deleteProduct(${product.id}, '${product.delete_url}', '${product.name.replace(/'/g, "\\'")}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tableBody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+});
+</script>
+{% endblock %}

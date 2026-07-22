@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="row page-titles">
+    <div class="col-md-5 align-self-center">
+        <h3 class="text-themecolor">{% if object %}Edit User: {{ object.username }}{% else %}Add New User{% endif %}</h3>
+    </div>
+    <div class="col-md-7 align-self-center">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'accounts:manage_users' %}">Users</a></li>
+            <li class="breadcrumb-item active">{% if object %}Edit{% else %}Add{% endif %} User</li>
+        </ol>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <form method="POST" id="registerForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-lg-8 col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 border-end">
+                                <span class="fw-bold text-uppercase small text-muted">Login Details</span>
+                                <hr>
+                                <div class='form-group mb-3'>
+                                    <label class="form-label">Username: *</label>
+                                    {% render_field form.username class='form-control' %}
+                                    {% if form.username.errors %}<small class="text-danger">{{ form.username.errors }}</small>{% endif %}
+                                </div>
+                                
+                                {% if not object %}
+                                <div class='form-group mb-3'>
+                                    <label class="form-label">Password: *</label>
+                                    {% render_field form.password class='form-control' type="password" %}
+                                    {% if form.password.errors %}<small class="text-danger">{{ form.password.errors }}</small>{% endif %}
+                                </div>
+                                <div class='form-group mb-3'>
+                                    <label class="form-label">Retype Password: *</label>
+                                    {% render_field form.confirm_password class='form-control' type="password" %}
+                                </div>
+                                {% else %}
+                                <div class="alert alert-light border small mt-4">
+                                    <i class="mdi mdi-information-outline me-1"></i> Passwords cannot be edited here.
+                                    <br><a href="#" class="fw-bold">Send Password Reset?</a>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <span class="fw-bold text-uppercase small text-muted">Personal Details</span>
+                                <hr>
+                                <div class='form-group mb-3'>
+                                    <label class="form-label">First Name: *</label>
+                                    {% render_field form.first_name class='form-control' %}
+                                </div>
+                                <div class='form-group mb-3'>
+                                    <label class="form-label">Last Name: *</label>
+                                    {% render_field form.last_name class='form-control' %}
+                                </div>
+                                <div class='form-group mb-3'>    
+                                    <label class="form-label">Email Address: *</label>
+                                    {% render_field form.email class='form-control' type="email" %}
+                                    {% if form.email.errors %}<small class="text-danger">{{ form.email.errors }}</small>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <span class="fw-bold text-uppercase small text-muted">Account Options</span>
+                        <hr>
+                        
+                        <div class='form-group mb-3'>
+                            <label class="form-label">Position</label>
+                            {% render_field form.position class='form-control selectpicker' data-style="btn-light border" %}
+                        </div>
+
+                        <div class='form-group mb-3'>
+                            <label class="form-label">Department</label> 
+                            {% render_field form.department class='form-control selectpicker' data-style="btn-light border" %}
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label class="form-label d-block">Set Status:</label>
+                            <div class="d-flex gap-4">
+                                <div class="form-check form-switch">
+                                    {% render_field form.is_active class="form-check-input" id="status" %}
+                                    <label class="form-check-label" for="status">Active</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {% render_field form.is_staff class="form-check-input" id="staff" %}
+                                    <label class="form-check-label" for="staff">Staff</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-3 border-top">
+                            <button type='submit' class='btn {% if object %}btn-primary{% else %}btn-success{% endif %} w-100 mb-2'>
+                                <i class='mdi {% if object %}mdi-content-save{% else %}mdi-account-plus{% endif %} me-1'></i> 
+                                {% if object %}Update Details{% else %}Create Account{% endif %}
+                            </button>
+                            <a href="{% url 'accounts:manage_users' %}" class="btn btn-outline-secondary btn-sm w-100">
+                                Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>                  
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

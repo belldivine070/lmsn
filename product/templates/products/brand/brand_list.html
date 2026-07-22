@@ -1,0 +1,73 @@
+{% extends 'layout.html' %}
+
+
+{% block subcontent %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold"><i class="bi bi-patch-check text-success me-2"></i>Brands</h3>
+    <a href="{% url 'products:brand_create' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle me-1"></i> Add New Brand
+    </a>
+</div>
+{% endblock  %}
+
+{% block content %}
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 100px;">Logo</th>
+                    <th>Brand Name</th>
+                    <th>Supplier</th>
+                    <th>Description</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for brand in brands %}
+                <tr id="brand-row-{{ brand.pk }}">
+                    <td>
+                        {% if brand.logo %}
+                            <img src="{{ brand.instance.image.file.url }}" class="img-thumbnail" width="60" style="max-height: 40px; object-fit: contain;">
+                        {% else %}
+                            <span class="text-muted small">No Logo</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="fw-bold">{{ brand.name }}</span></td>
+                    <td>
+                        <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2 rounded-pill">
+                            {{ brand.supplier.name }}
+                        </span>
+                    </td>
+                    <td class="text-muted small">{{ brand.description|truncatechars:60 }}</td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <!-- Edit Button -->
+                            <a href="{% url 'products:brand_edit' brand.pk %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            
+                            <!-- Delete Button -->
+                            <a href="{% url 'products:brand_delete' brand.pk %}" 
+                               class="btn btn-sm btn-outline-danger" 
+                               title="Delete"
+                               onclick="return confirm('Are you sure you want to delete the brand: {{ brand.name }}?');">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="bi bi-tags display-4 d-block mb-2"></i>
+                        No brands found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

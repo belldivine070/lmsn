@@ -1,0 +1,243 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="admin-container container-fluid py-4">
+
+    <!-- TOP STATS -->
+    <div class="row mb-4 g-3">
+        <div class="col-md-6">
+            <div class="card bg-primary text-white shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase small fw-semibold">Total Revenue</h6>
+                    <h4 class="mb-0 fw-bold">₦{{ total_revenue|floatformat:2 }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-warning text-dark shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase small fw-semibold">Active Refunds</h6>
+                    <h4 class="mb-0 fw-bold">₦{{ refunded_total|default:"0.00"|floatformat:2 }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0">Financial Transactions</h4>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body py-3">
+            <form method="GET" class="row align-items-center g-2">
+
+                <div class="col-md-8">
+                    <input 
+                        type="text" 
+                        name="q" 
+                        value="{{ request.GET.q }}" 
+                        class="form-control form-control-sm" 
+                        placeholder="Search by Reference, Email, or Order ID..."
+                    >
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-dark btn-sm w-100">
+                        Search
+                    </button>
+                </div>
+
+                <div class="col-md-2">
+                    <a href="?" class="btn btn-outline-secondary btn-sm w-100">
+                        Reset
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-responsive card shadow-sm">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Reference</th>
+                    <th>Customer</th>
+                    <th>Order</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for pay in payments %}
+                <tr>
+                    <td>
+                        <code class="text-primary">{{ pay.transaction_reference }}</code>
+                    </td>
+
+                    <td>{{ pay.user.email }}</td>
+
+                    <td>
+                        <span class="badge bg-light text-dark">
+                            #{{ pay.order.order_number   }}
+                        </span>
+                    </td>
+
+                    <td class="fw-semibold text-dark">
+                        ₦{{ pay.amount|floatformat:2 }}
+                    </td>
+
+                    <td>
+                        <span class="badge 
+                            {% if pay.status == 'successful' %}
+                                bg-success-subtle text-success
+                            {% elif pay.status == 'refunded' %}
+                                bg-warning-subtle text-warning
+                            {% else %}
+                                bg-secondary-subtle text-secondary
+                            {% endif %}
+                        ">
+                            {{ pay.status|upper }}
+                        </span>
+                    </td>
+
+                    <td>{{ pay.created_at|date:"M d, Y" }}</td>
+
+                    <td class="text-end">
+                        <div class="d-flex gap-2 justify-content-end">
+
+                            <a href="{% url 'payments:detail' pay.id %}" 
+                               class="btn btn-sm btn-outline-primary">
+                                Details
+                            </a>
+
+                            {% if pay.status == 'successful' %}
+                                <button 
+                                    class="btn btn-sm btn-outline-danger"
+                                    onclick="openRefundModal('{{ pay.id }}', '{{ pay.amount }}')">
+                                    Refund
+                                </button>
+                            {% endif %}
+
+                        </div>
+                    </td>
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        No transactions found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" 
+                       href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                        Previous
+                    </a>
+                </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">{{ page_obj.number }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" 
+                       href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                        Next
+                    </a>
+                </li>
+            {% endif %}
+
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- REFUND MODAL -->
+<div id="refundModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Process Refund</h5>
+                <button type="button" class="btn-close btn-close-white" onclick="closeRefundModal()"></button>
+            </div>
+
+            <form id="refundForm" method="post" action="">
+                {% csrf_token %}
+
+                <div class="modal-body">
+                    <p>
+                        You are initiating a refund for 
+                        <strong>₦<span id="displayAmount"></span></strong>.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Reason for Refund</label>
+                        <textarea 
+                            name="reason" 
+                            class="form-control form-control-sm" 
+                            rows="3" 
+                            required 
+                            placeholder="e.g. Customer requested cancellation">
+                        </textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" 
+                            class="btn btn-secondary btn-sm" 
+                            onclick="closeRefundModal()">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        Confirm Refund
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT -->
+<script>
+function openRefundModal(paymentId, amount) {
+    const form = document.getElementById('refundForm');
+    form.action = `/payments/${paymentId}/refund/`;
+
+    document.getElementById('displayAmount').innerText = amount;
+
+    const modal = new bootstrap.Modal(document.getElementById('refundModal'));
+    modal.show();
+}
+
+function closeRefundModal() {
+    const modalEl = document.getElementById('refundModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal.hide();
+}
+</script>
+
+{% endblock %}

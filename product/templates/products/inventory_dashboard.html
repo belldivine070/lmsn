@@ -1,0 +1,93 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold"><i class="bi bi-box-seam text-warning me-2"></i>Inventory Ledger</h3>
+    <div class="btn-group">
+        <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print Report
+        </button>
+        <a href="{% url 'product_create' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg"></i> New Product
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-primary text-white p-3">
+            <small>Total Products</small>
+            <h2 class="mb-0">{{ variants.count }}</h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-danger text-white p-3">
+            <small>Out of Stock</small>
+            <h2 class="mb-0" id="oos-count">
+                {{ variants.all|dictsort:"stock_status"|reversed|first|default:"0" }}
+            </h2>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Barcode</th>
+                    <th>Product & SKU</th>
+                    <th>Cost Price</th>
+                    <th>Selling Price</th>
+                    <th>Total Stock</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in variants %}
+                <tr id="variant-row-{{ v.pk }}">
+                    <td><code>{{ v.product.barcode|default:"N/A" }}</code></td>
+                    <td>
+                        <span class="fw-bold">{{ v.product.name }}</span><br>
+                        <small class="text-muted text-uppercase">{{ v.sku }}</small>
+                    </td>
+                    <td>${{ v.inventory_records.first.cost_price|default:"0.00" }}</td>
+                    <td><strong>${{ v.current_price }}</strong></td>
+                    <td class="fw-bold">{{ v.total_stock }}</td>
+                    <td>
+                        {% if v.stock_status == "In Stock" %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">In Stock</span>
+                        {% elif v.stock_status == "Low Stock" %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Low Stock</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Out of Stock</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <a href="{% url 'add_stock' v.pk %}" class="btn btn-sm btn-dark" title="Add New Stock Batch">
+                                <i class="bi bi-plus-square"></i>
+                            </a>
+                            <a href="{% url 'product_edit' v.product.slug %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    hx-delete="{% url 'product_delete' v.product.pk %}"
+                                    hx-target="#variant-row-{{ v.pk }}"
+                                    hx-confirm-js>
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">No inventory records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "lmsn/layout.html" %}
+{% load static %}
+
+{% block title %}{{ page.title }} | BGTECH{% endblock %}
+
+{% block content %}
+<div class="breadcrumb_section bg_gray page-title-mini">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="page-title">
+                    <h1>{{ page.title }}</h1>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <ol class="breadcrumb justify-content-md-end">
+                    <li class="breadcrumb-item"><a href="{% url 'lmsn:index' %}">Home</a></li>
+                    <li class="breadcrumb-item active">{{ page.title }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main_content">
+    <div class="section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="term_conditions">
+                        
+                        {# 1. Loop over each layout section layer assigned to the page #}
+                        {% for section in sections %}
+                            
+                            {# If you added a core descriptive body block on the section itself, render it first #}
+                            {% if section.body_content %}
+                                <div class="section-intro-text mb-4">
+                                    {{ section.body_content|safe }}
+                                </div>
+                            {% endif %}
+                            
+                            {# 2. Loop through the safe database post entries tied to this section #}
+                            {% for policy in section.assigned_posts %}
+                                <h6>{{ policy.title }}</h6>
+                                <p>{{ policy.content|default:policy.body_content|safe }}</p>
+                            {% empty %}
+                                {% if not section.body_content %}
+                                    <p class="text-muted small">No active policy items published in this structural layer.</p>
+                                {% endif %}
+                            {% endfor %}
+                            
+                        {% empty %}
+                            {# Fallback catch if the page exists in the DB but has no layout rows built yet #}
+                            <p class="text-center text-muted py-4">No content configurations found for this page canvas wrapper layout yet.</p>
+                        {% endfor %}
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

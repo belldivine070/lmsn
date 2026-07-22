@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+{% load static %}
+{% load category_tags %}
+
+
+{% block subcontent %}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div class="mb-3 mb-md-0 text-center text-md-start">
+            <h2 class="h3 mb-1 text-dark fw-bold">{{ category.title }} Posts</h2>
+            <p class="text-muted small mb-0">Manage content and visibility</p>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-center align-items-center">
+            <a href="{% url 'core:category_list' %}" class="btn btn-link text-decoration-none text-muted small pe-3 border-end">
+                <i class="bi bi-arrow-left"></i> Back to Categories
+            </a>
+            <a href="{% url 'core:post_create' category_slug=category.slug %}" class="btn-add-post">
+                <i class="bi bi-plus-lg"></i> <span>Add New Post</span>
+            </a>
+        </div>
+    </div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid mt-3 mt-md-4"> 
+
+    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0 custom-fade-table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>Title</th>
+                            <th class="d-none d-lg-table-cell">Author</th>
+                            <th class="d-none d-md-table-cell">Date</th>
+                            <th class="d-none d-lg-table-cell text-center">Status</th>
+                            <th class="text-end pe-4">Action</th> 
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in posts %}
+                        <tr>
+                            <td class="ps-4 text-muted small">{{ forloop.counter }}</td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ post.title }}</div>
+                                <div class="d-lg-none mt-1 small">
+                                    <div class="text-muted mb-1 smaller">
+                                        <i class="bi bi-person me-1"></i>{{ post.author.username }}
+                                    </div>
+                                    {% if post.is_published %}
+                                        <span class="badge badge-active">Published</span>
+                                    {% else %}
+                                        <span class="badge badge-draft">Draft</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="d-none d-lg-table-cell small text-muted">
+                                {{ post.author.get_full_name|default:post.author.username }}
+                            </td>
+                            <td class="d-none d-md-table-cell small text-muted">
+                                {{ post.updated_at|date:"M d, Y" }}
+                            </td>
+                            <td class="d-none d-lg-table-cell text-center">
+                                {% if post.is_published %}
+                                    <span class="badge badge-active shadow-sm">Published</span>
+                                {% else %}
+                                    <span class="badge badge-draft shadow-sm">Draft</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="{% url 'core:post_edit' category_slug=post.category.slug post_slug=post.slug %}" 
+                                       class="btn btn-action-edit" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form method="post" action="{% url 'core:category_post_delete' category_slug=post.category.slug post_slug=post.slug %}" class="d-inline" onsubmit="return confirm('Delete post?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-action-delete" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted small">No posts found in this category.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 1. MODERN ADD BUTTON STYLE */
+    .btn-add-post {
+        background-color: #0d6efd;
+        color: white !important;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(13, 110, 253, 0.15);
+        border: none;
+    }
+
+    .btn-add-post:hover {
+        background-color: #0b5ed7;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 12px rgba(13, 110, 253, 0.2);
+    }
+
+    /* 2. LIGHT HEADER & ZEBRA FADE */
+    .custom-fade-table thead th {
+        background-color: #f8f9fa; /* Light Color */
+        color: #6c757d;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 15px 10px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .custom-fade-table tbody tr {
+        transition: background-color 0.4s ease-in-out; /* Cross-fade */
+    }
+
+    /* Zebra Striping */
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.015);
+    }
+
+    /* 3. REFINED BADGE STYLES */
+    .badge-active {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border: 1px solid #badbcc;
+        font-size: 0.7rem;
+        padding: 5px 12px;
+    }
+
+    .badge-draft {
+        background-color: #e2e3e5;
+        color: #41464b;
+        border: 1px solid #d3d3d4;
+        font-size: 0.7rem;
+        padding: 5px 12px;
+    }
+
+    /* 4. ACTION BUTTONS */
+    .btn-action-edit, .btn-action-delete {
+        padding: 6px 10px;
+        border-radius: 6px;
+        transition: 0.2s;
+        border: 1px solid #f1f1f1;
+        background: white;
+    }
+
+    .btn-action-edit { color: #0d6efd; }
+    .btn-action-delete { color: #dc3545; }
+
+    .btn-action-edit:hover { background: #f0f7ff; border-color: #0d6efd; }
+    .btn-action-delete:hover { background: #fff5f5; border-color: #dc3545; }
+
+    @media (max-width: 576px) {
+        .btn-add-post span { display: none; }
+        .btn-add-post { padding: 10px; border-radius: 50%; }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends "layout.html" %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block content %}
+<style>
+    #recipient-preview-box { 
+        max-height: 400px; 
+        overflow-y: auto; 
+        border: 1px solid #dee2e6; 
+        border-radius: 8px; 
+        background-color: #f8f9fa;
+    }
+    .recipient-row:hover { background-color: #e9ecef; cursor: pointer; }
+    .django-summernote-widget { width: 100% !important; height: 400px !important; }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css">
+
+<div class="container-fluid py-4">
+    <form method="post" id="broadcast-form">
+        {% csrf_token %}
+        {{ form.media }}
+
+        <!-- Hidden input for user timezone -->
+        <input type="hidden" name="user_timezone" id="user_timezone">
+
+        <div class="row g-4">
+            <!-- LEFT -->
+            <div class="col-12 col-lg-8">
+                <div class="card shadow-sm border-0 p-4 rounded-4 bg-white">
+                    <h3 class="fw-bold mb-4 text-primary">
+                        <i class="bi bi-megaphone-fill me-2"></i>Broadcast Composer
+                    </h3>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">TITLE</label>
+                        {% render_field form.title class="form-control border-2 shadow-none" %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">SUBJECT</label>
+                            {% render_field form.subject class="form-control border-2 shadow-none" %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">SENDER EMAIL</label>
+                            {% render_field form.sender_email class="form-control border-2 shadow-none" %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">MESSAGE CONTENT</label>
+                        {{ form.content }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow">
+                        <i class="bi bi-send-check-fill me-2"></i> Start Dispatch Sequence
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="col-12 col-lg-4">
+                <div class="card shadow-sm border-0 p-3 rounded-4 mb-3 bg-white">
+                    <label class="form-label small fw-bold text-muted">SCHEDULE (OPTIONAL)</label>
+                    {% render_field form.scheduled_time class="form-control border-2 shadow-none" id="datetimepicker" autocomplete="off" placeholder="Click to select date & time"   %}
+
+                    <h6 class="fw-bold mt-4 mb-3 small text-muted">AUDIENCE SELECTION</h6>
+                    {% render_field form.target_audience class="form-select mb-3 border-2 shadow-none" id="id_target_audience" %}
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small fw-bold">
+                            Selected (<span id="recipient-count" class="text-primary">0</span>)
+                        </span>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="check-all-toggle" checked>
+                            <label class="form-check-label small fw-bold">Select All</label>
+                        </div>
+                    </div>
+
+                    <input type="text" id="email-search" class="form-control form-control-sm mb-2" placeholder="Search emails...">
+
+                    <div id="recipient-preview-box">
+                        <div id="recipient-list">
+                            <p class="text-center text-muted small py-5">Load an audience to see recipients...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTORY -->
+                <div class="card shadow-sm border-0 p-3 rounded-4 bg-dark text-white">
+                    <h6 class="fw-bold mb-3 small text-white-50">RECENT HISTORY</h6>
+
+                    <div class="overflow-auto" style="max-height: 250px;">
+                        {% for post in recent_posts %}
+                        <div class="bg-white bg-opacity-10 rounded-3 p-2 mb-2 border border-white border-opacity-10">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="d-flex flex-column justify-content-center">
+                                    <div class="mb-1">
+                                        <div class="fw-bold text-white lh-sm mb-1" style="font-size: 0.95rem;">
+                                            {{ post.title }}
+                                        </div>
+                                        <div class="text-white-50 small lh-sm">
+                                            {{ post.subject }}
+                                        </div>
+                                    </div>
+
+                                    <div class="small mt-1 d-flex flex-wrap align-items-center" style="font-size: 0.75rem; opacity: 0.8;">
+                                        <span class="text-white-50">
+                                            <i class="bi bi-calendar-event me-1"></i>{{ post.created_at|date:"M d, Y" }}
+                                        </span>
+                                        
+                                        {% if post.scheduled_time %}
+                                            <span class="mx-2 text-white-50">•</span>
+                                            <span class="text-info">
+                                                <i class="bi bi-clock-history me-1"></i>Scheduled: {{ post.scheduled_time|date:"M d, H:i" }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-1">
+                                    <a href="?reuse={{ post.id }}"
+                                       class="btn btn-sm btn-info py-0 px-2 fw-bold"
+                                       style="font-size: 0.7rem;">
+                                        REUSE
+                                    </a>
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-danger py-0 px-2 delete-btn"
+                                            data-url="{% url 'core:delete_broadcast' post.id %}"
+                                            style="font-size: 0.7rem;">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-center small text-white-50">No history yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"></script>
+
+
+{% endblock %}

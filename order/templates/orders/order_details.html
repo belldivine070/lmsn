@@ -1,0 +1,328 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Admin Panel Container */
+    .admin-order-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: #333;
+        padding: 0 1rem;
+    }
+
+    /* Top Bar Summary */
+    .order-header-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .header-meta h2 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+        color: #1e293b;
+    }
+
+    .header-meta h4 {
+        margin: 0;
+        font-weight: 400;
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    /* Dynamic Badges */
+    .admin-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-block;
+    }
+    .badge-paid { background-color: #dcfce7; color: #15803d; }
+    .badge-unpaid { background-color: #fee2e2; color: #b91c1c; }
+
+    /* Main Content Layout - 3 Column Grid for Management Panels */
+    .order-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .left-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-top: 0;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    /* Items List Table-Style */
+    .item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .item-row:last-child { border-bottom: none; }
+    .item-details { display: flex; flex-direction: column; }
+    .item-name { font-weight: 500; color: #334155; }
+    .item-qty { font-size: 0.85rem; color: #64748b; margin-top: 0.25rem; }
+    .item-price { font-weight: 600; color: #1e293b; }
+
+    /* Financial Summary Card */
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+        color: #64748b;
+    }
+    .summary-total-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1.25rem;
+        padding-top: 1.25rem;
+        border-top: 2px dashed #e2e8f0;
+    }
+    .total-label { font-size: 1.1rem; font-weight: 700; color: #1e293b; }
+    .total-amount { font-size: 1.3rem; font-weight: 700; color: #0f172a; }
+
+    /* Admin Form Controls styling */
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 0.5rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        color: #334155;
+        background-color: #fff;
+        box-sizing: border-box;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .btn-submit {
+        width: 100%;
+        background-color: #2563eb;
+        color: white;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+    .btn-submit:hover { background-color: #1d4ed8; }
+
+    /* Timeline Styling */
+    .timeline {
+        position: relative;
+        padding-left: 1.5rem;
+        margin-top: 1rem;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 5px;
+        bottom: 5px;
+        width: 2px;
+        background: #e2e8f0;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-marker {
+        position: absolute;
+        left: -24px;
+        top: 4px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #3b82f6;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #3b82f6;
+    }
+    .timeline-content h4 { margin: 0 0 0.25rem 0; font-size: 0.95rem; color: #1e293b; }
+    .timeline-content p { margin: 0; font-size: 0.85rem; color: #64748b; }
+    .timeline-date { font-size: 0.75rem; color: #94a3b8; display: block; margin-top: 0.25rem; }
+
+    @media (max-width: 992px) {
+        .order-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+        .order-header-card { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    }
+</style>
+
+<div class="admin-order-container">
+
+    <div class="order-header-card">
+        <div class="header-meta">
+            <h2>Order #{{ order.order_number }}</h2>
+            <h4>Date: {{ order.created_at|date:"F d, Y • h:i A" }}</h4>
+            <h4 style="margin-top: 0.25rem;">Customer Email: <strong>{{ order.user.email }}</strong></h4>
+        </div>
+        <div>
+            <div style="margin-bottom: 0.5rem; text-align: right;">
+                <span class="admin-badge" style="background-color: #e2e8f0; color: #334155;">Status: {{ order.status }}</span>
+            </div>
+            {% if order.is_paid %}
+                <span class="admin-badge badge-paid">Paid</span>
+            {% else %}
+                <span class="admin-badge badge-unpaid">Unpaid</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="order-grid">
+        
+        <div class="left-column">
+            
+            <div class="card">
+                <h3 class="card-title">Order Items ({{ order.order_items.count }})</h3>
+                <div class="order-items-list">
+                    {% for item in order.order_items.all %}
+                        <div class="item-row">
+                            <div class="item-details">
+                                <span class="item-name">{{ item.product_name_snapshot }}</span>
+                                <span class="item-qty">Quantity: {{ item.quantity }}</span>
+                            </div>
+                            <div class="item-price">
+                                ₦{{ item.price_at_purchase }}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p style="color: #64748b; text-align: center; padding: 2rem 0;">No items found in this order.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">Customer Tracking History Logs</h3>
+                <div class="timeline">
+                    {% for log in tracking_history %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h4>Pipeline Updated to: <span style="text-transform: capitalize;">{{ log.order_status }}</span></h4>
+                                {% if log.status_message %}
+                                    <p>{{ log.status_message }}</p>
+                                {% endif %}
+                                <span class="timeline-date">{{ log.created_at|date:"M d, Y • h:i A" }}</span>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p style="color: #64748b; text-align: center; padding: 1rem 0; margin: 0;">No tracking history logs captured yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="right-column" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            {% if request.user.is_staff and form %}
+            <div class="card" style="border-color: #93c5fd; background-color: #f8fafc;">
+                <h3 class="card-title" style="color: #1d4ed8; border-color: #bfdbfe;">Update Tracking Status</h3>
+                
+                <form method="post" action="{% url 'orders:order_detail' order_number=order.order_number %}">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div style="color: #b91c1c; font-size: 0.85rem; margin-bottom: 1rem;">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {# Inject form classes natively #}
+                            <div class="field-container">
+                                {% if field.field.widget.input_type == 'select' or field.name == 'order_status' %}
+                                    <select name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control">
+                                        {% for value, text in field.field.choices %}
+                                            <option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ text }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <textarea name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control" rows="3" placeholder="Enter status milestone details or location details for the customer..."></textarea>
+                                {% endif %}
+                            </div>
+                            {% if field.errors %}
+                                <div style="color: #b91c1c; font-size: 0.8rem; margin-top: 0.25rem;">
+                                    {{ field.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn-submit">Push Update & Notify</button>
+                </form>
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <h3 class="card-title">Payment Summary</h3>
+                
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span>₦{{ order.total_amount }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span>₦0.00</span>
+                </div>
+                
+                <div class="summary-total-row">
+                    <span class="total-label">Grand Total</span>
+                    <span class="total-amount">₦{{ order.total_amount }}</span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock content %}

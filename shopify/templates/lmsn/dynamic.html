@@ -1,0 +1,132 @@
+{% extends 'lmsn/layout.html' %}
+
+
+
+{% block content %}
+<div class="dynamic-page-wrapper">
+    
+    {% for section in sections %}
+        {{ section.page }}
+        {{ section.body_content }}
+        
+        {% comment %} {# --- 1. HERO BLOCK --- #}
+        {% if section.layout_type == 'hero' %}
+            <section class="relative bg-gray-900 text-white py-24 px-6 text-center">
+                <div class="max-w-4xl mx-auto">
+                    {% if section.section_subtitle %}<span class="text-blue-400 font-semibold tracking-wider uppercase">{{ section.section_subtitle }}</span>{% endif %}
+                    <h1 class="text-4xl md:text-6xl font-bold mt-2 mb-6">{{ section.section_title|default:page.title }}</h1>
+                    <div class="text-lg text-gray-300 mb-8">{{ section.body_content|safe }}</div>
+                    {% if section.cta_url %}
+                        <a href="{{ section.cta_url }}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg inline-block transition shadow-lg">
+                            {{ section.cta_text|default:"Learn More" }}
+                        </a>
+                    {% endif %}
+                </div>
+            </section>
+
+        {# --- 2. STANDARD DETAIL CONTENT LAYOUT --- #}
+        {% elif section.layout_type == 'standard' %}
+            <section class="py-16 px-6 bg-white dark:bg-gray-800">
+                <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                    <div class="{% if section.order|divisibleby:2 %}md:order-last{% endif %}">
+                        {% if section.section_subtitle %}<p class="text-sm text-blue-500 font-semibold uppercase">{{ section.section_subtitle }}</p>{% endif %}
+                        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mt-1 mb-4">{{ section.section_title }}</h2>
+                        
+                        {# Primary Core Section Copy Text #}
+                        <div class="text-gray-600 dark:text-gray-300 space-y-4 mb-6">{{ section.body_content|safe }}</div>
+                        
+                        {# DYNAMIC CHILD POST LOOP (e.g., Privacy Policy Rows / Terms Bullet Points) #}
+                        {% if section.assigned_posts %}
+                            <div class="assigned-posts-stream space-y-6 border-t border-gray-100 dark:border-gray-700 pt-6 mt-4">
+                                {% for post in section.assigned_posts %}
+                                    <div class="post-item-entry">
+                                        <h4 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">{{ post.title }}</h4>
+                                        <div class="text-gray-600 dark:text-gray-400 prose prose-sm max-w-none">
+                                            {{ post.content|default:post.body_content|safe }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% if section.cta_url %}
+                            <a href="{{ section.cta_url }}" class="mt-6 text-blue-600 hover:text-blue-700 font-semibold inline-flex items-center gap-2">
+                                {{ section.cta_text }} &rarr;
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if section.image_asset %}
+                            <img src="{{ section.image_asset.url }}" alt="{{ section.section_title }}" class="rounded-xl shadow-md w-full object-cover max-h-96">
+                        {% elif section.image %} {# Fallback support for alterative model names #}
+                            <img src="{{ section.image.url }}" alt="{{ section.section_title }}" class="rounded-xl shadow-md w-full object-cover max-h-96">
+                        {% else %}
+                            <div class="bg-gray-200 dark:bg-gray-700 h-64 rounded-xl flex items-center justify-center text-gray-400">Image Asset Placeholder</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+        {# --- 3. QUICK INFO CALLOUT BANNER --- #}
+        {% elif section.layout_type == 'info' %}
+            <section class="bg-blue-600 text-white py-8 px-6">
+                <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold">{{ section.section_title }}</h3>
+                        {% if section.section_subtitle %}<p class="text-blue-100 text-sm">{{ section.section_subtitle }}</p>{% endif %}
+                        
+                        {# Dynamic subtext output support if category links exist inside info bar fields #}
+                        {% if section.assigned_posts %}
+                            <div class="mt-2 space-y-1 text-sm text-blue-100">
+                                {% for post in section.assigned_posts %}
+                                    <p>&bull; <strong>{{ post.title }}:</strong> {{ post.content|default:post.body_content|striptags|truncatewords:15 }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% if section.cta_url %}
+                        <a href="{{ section.cta_url }}" class="bg-white text-blue-600 hover:bg-gray-100 font-bold py-2 px-6 rounded-md transition shadow-sm">
+                            {{ section.cta_text }}
+                        </a>
+                    {% endif %}
+                </div>
+            </section>
+
+        {# --- 4. DYNAMIC ENGINE WIDGETS OR ACCORDIONS / TESTIMONIALS --- #}
+        {% elif section.layout_type == 'widget_box' or section.layout_type == 'testimonial' %}
+            <section class="py-12 bg-gray-50 dark:bg-gray-900">
+                <div class="max-w-6xl mx-auto px-6">
+                    <h2 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">
+                        {{ section.section_title|default:section.widget.name }}
+                    </h2>
+                    
+                    {% if section.widget %}
+                        <div class="widget-mount-point mb-4">
+                            {{ section.widget.render_content|safe }} 
+                        </div>
+                    {% endif %}
+
+                    {# If a widget type uses post filter selections natively #}
+                    {% if section.assigned_posts %}
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                            {% for post in section.assigned_posts %}
+                                <div class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                    <h5 class="font-bold text-gray-900 dark:text-white mb-2">{{ post.title }}</h5>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">{{ post.content|default:post.body_content|safe }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+        {% endif %}
+         {% endcomment %}
+    {% empty %}
+        <div class="py-24 text-center">
+            <h2 class="text-2xl font-bold text-gray-500">This page has no layout section content configured yet.</h2>
+        </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

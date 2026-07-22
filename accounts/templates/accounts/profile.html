@@ -1,0 +1,199 @@
+{% extends "layout.html" %}
+{% load static %}
+
+
+
+{% block content %}
+                    
+<div class="profile-card"> 
+    <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrfmiddlewaretoken" value="sFUS6yfVPxbLbzIoL00VAHwoB0ID6lLq9mIcow1bHOP2UFu0IoFDdpzKLd88lG0s">
+        
+            <div class="form-group mb-3">
+                <label for="id_username" class="form-label">Username</label>
+                <input type="text" name="username" value="belldivine070" maxlength="150" class="form-control" required="" id="id_username">
+            </div>
+        
+            <div class="form-group mb-3">
+                <label for="id_email" class="form-label">Email</label>
+                <input type="email" name="email" value="belldivine070@gmail.com" maxlength="254" class="form-control" required="" id="id_email">
+            </div>
+            <div class="">
+                <div class="form-group mb-3 col-6">
+                    <label for="id_first_name" class="form-label">First name</label>
+                    <input type="text" name="first_name" value="DIVINE" maxlength="30" class="form-control" required="" id="id_first_name">
+                </div>
+        
+                <div class="form-group mb-3 col-6">
+                    <label for="id_last_name" class="form-label">Last name</label>
+                    <input type="text" name="last_name" value="BELL-GAM" maxlength="30" class="form-control" required="" id="id_last_name">
+                </div>
+            </div>
+        
+            <div class="form-group mb-3">
+                <label for="id_mobile" class="form-label">Mobile</label>
+                <input type="text" name="mobile" value="+234 7047137084" maxlength="20" class="form-control" id="id_mobile">
+            </div>
+
+{% comment %}         
+            <div class="form-group mb-3">
+                <label for="id_is_active" class="form-label">Is active</label>
+                <input type="checkbox" name="is_active" id="id_is_active" checked="">
+            </div>
+
+            
+            <div class="form-group mb-3">
+                <label for="id_position" class="form-label">Position</label>
+                <select name="position" class="form-control" id="id_position">
+                <option value="">---------</option>
+                {% for p in form.RolePermission %}
+                    <option value="{{p.id}}" selected="">{{ p }}</option>
+                {% endfor %}
+                </select>
+            </div>
+        
+            <div class="form-group mb-3">
+                <label for="id_department" class="form-label">Department</label>
+                <select name="department" class="form-control" id="id_department">
+                <option value="">---------</option>
+                {% for dep in form.Department %}
+                    <option value="{{dep.id}}" selected="">{{ dep }}</option>
+                {% endfor %}
+                </select>
+            </div>
+        
+            <div class="form-group mb-3">
+                <label for="id_assigned_to" class="form-label">Assigned to</label>
+                <select name="assigned_to" class="form-control" id="id_assigned_to">
+                <option value="" selected="">---------</option>
+                {% for x in assigned_to %}
+                    <option value="{{ X.id }}">{{ X }}</option>
+                {% endfor %}
+                </select>
+            </div>
+        
+{% endcomment %}
+
+            <div class="form-group mb-3">
+                <label for="id_is_staff" class="form-label">Is staff</label>
+                <input type="checkbox" name="is_staff" id="id_is_staff" checked="">
+            </div>
+        
+            <div class="form-group mb-3 row">
+                <label for="id_image" class="form-label">Image</label>
+                Currently: <a href="/media/profile_images/Divine_pass.jpg">profile_images/Divine_pass.jpg</a>
+                <input type="checkbox" name="image-clear" id="image-clear_id">
+                <label for="image-clear_id">Clear</label><br>
+                Change:
+                <input type="file" name="image" accept="image/*" class="form-control" id="id_image">
+            </div>
+        
+            <div class="form-group mb-3">
+                <label for="id_position" class="form-label">Position</label>
+                <select name="position" class="form-control" id="id_position">
+                <option value="">---------</option>
+
+                <option value="1" selected="">Super Admin</option>
+
+                </select>
+            </div>
+        
+            <div class="form-group mb-3">
+                <label for="id_department" class="form-label">Department</label>
+                <select name="department" class="form-control" id="id_department">
+                <option value="">---------</option>
+
+                <option value="1" selected="">Administration</option>
+
+                </select>
+            </div>
+        
+            <div class="form-group mb-3">
+                <label for="id_assigned_to" class="form-label">Assigned to</label>
+                <select name="assigned_to" class="form-control" id="id_assigned_to">
+                <option value="" selected="">---------</option>
+
+                <option value="81323b6f-2275-4523-9f30-ea1197da4384">belldivine070@gmail.com</option>
+
+                <option value="9e82a8e9-6a82-40b8-a126-a8b932e123c6">chisom119@gmail.com</option>
+
+                </select>
+            </div>
+        
+
+        <input type="hidden" name="addresses-TOTAL_FORMS" value="1" id="id_addresses-TOTAL_FORMS"><input type="hidden" name="addresses-INITIAL_FORMS" value="1" id="id_addresses-INITIAL_FORMS"><input type="hidden" name="addresses-MIN_NUM_FORMS" value="0" id="id_addresses-MIN_NUM_FORMS"><input type="hidden" name="addresses-MAX_NUM_FORMS" value="1" id="id_addresses-MAX_NUM_FORMS">
+            
+            <div class="form-group col-md-12 mb-3">
+                <label>Shipping Address <span class="required">*</span></label>
+                <input required="" class="form-control" name="addresses-0-address_line_1" value="Obidianso Sreet" type="text">
+            </div>
+                <div class="form-group col-md-6 mb-3">
+                <label>City <span class="required">*</span></label>
+                <input required="" class="form-control" name="addresses-0-city" value="Portharcourt" type="text">
+            </div>
+            <div class="form-group col-md-6 mb-3">
+                <label>State <span class="required">*</span></label>
+                <input required="" class="form-control" name="addresses-0-state" value="Rivers" type="text">
+            </div>
+            <div class="form-group col-md-6 mb-3">
+                <label>Country <span class="required">*</span></label>
+                <input required="" class="form-control" name="addresses-0-country" value="Nigeria" type="text">
+            </div>
+            <input type="hidden" name="addresses-0-id" value="1" id="id_addresses-0-id"><input type="hidden" name="addresses-0-user" value="81323b6f-2275-4523-9f30-ea1197da4384" id="id_addresses-0-user">
+
+            <label>confirm password</label>
+            <input type="text" name="password">
+            <label>confirm password</label>
+            <input type="text" name="password">
+        
+
+        <button type="submit" class="btn btn-success">Update Profile</button>
+    </form>
+</div>
+
+
+
+<div class="profile-card"> 
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% for field in form %}
+            <div class="form-group mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+                
+                {% if field.help_text %}
+                    <small class="text-muted d-block">{{ field.help_text }}</small>
+                {% endif %}
+                
+                {% for error in field.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        {{ address_form.management_form }}
+            {% for addr_form in address_form %}
+            <div class="form-group col-md-12 mb-3">
+                <label>Shipping Address <span class="required">*</span></label>
+                <input required="" class="form-control" name="{{ addr_form.address_line_1.html_name }}" value="{{ addr_form.address_line_1.value|default:'' }}" type="text">
+            </div>
+                <div class="form-group col-md-6 mb-3">
+                <label>City <span class="required">*</span></label>
+                <input required="" class="form-control" name="{{ addr_form.city.html_name }}" value="{{ addr_form.city.value|default:'' }}" type="text">
+            </div>
+            <div class="form-group col-md-6 mb-3">
+                <label>State <span class="required">*</span></label>
+                <input required="" class="form-control" name="{{ addr_form.state.html_name }}" value="{{ addr_form.state.value|default:'' }}" type="text">
+            </div>
+            <div class="form-group col-md-6 mb-3">
+                <label>Country <span class="required">*</span></label>
+                <input required="" class="form-control" name="{{ addr_form.country.html_name }}" value="{{ addr_form.country.value|default:'' }}" type="text">
+            </div>
+            {% for hidden in addr_form.hidden_fields %}{{ hidden }}{% endfor %}
+        {% endfor %}
+
+        <button type="submit" class="btn btn-success">Update Profile</button>
+    </form>
+</div>
+{% endblock content %}

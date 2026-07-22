@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid pt-3">
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show small shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+            <div>
+                <h5 class="m-0 text-primary fw-semibold" style="font-size: 1.1rem;">
+                    <i class="bi bi-building me-2"></i> Enterprise Units & Departments
+                </h5>
+                <p class="text-muted small mb-0">Track internal business groups, corporate distribution listings, and organizational rulesets.</p>
+            </div>
+            <div>
+                <a href="{% url 'accounts:add_department' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i> Add Department
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small text-secondary">
+                    <thead class="table-light text-dark fw-bold">
+                        <tr>
+                            <th class="ps-4" style="width: 30%;">Operational Group</th>
+                            <th style="width: 45%;">Distribution Target Email Address</th>
+                            <th class="text-end pe-4" style="width: 25%;">Operations Matrix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dept in departments %}
+                            <tr>
+                                <td class="ps-4 text-dark fw-semibold">
+                                    <i class="bi bi-diagram-3 text-muted me-2"></i>{{ dept.name }}
+                                </td>
+                                <td>
+                                    <a href="mailto:{{ dept.contact_email }}" class="text-decoration-none font-monospace small">
+                                        {{ dept.contact_email }}
+                                    </a>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <a href="{% url 'accounts:edit_department' dept.pk %}" class="btn btn-light btn-sm text-primary border" title="Configure Core Properties">
+                                            <i class="bi bi-gear-fill"></i> Adjust
+                                        </a>
+                                        <form method="post" action="{% url 'accounts:delete_department' dept.pk %}" class="d-inline" onsubmit="return confirm('Confirm permanent removal of branch entity: {{ dept.name }}?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-light btn-sm text-danger border ms-1" title="Purge Group Record">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-5 text-muted">
+                                    <i class="bi bi-building-exclamation d-block fs-3 mb-2 text-muted"></i>
+                                    No administrative operational divisions registered on this server.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

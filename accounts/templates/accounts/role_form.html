@@ -1,0 +1,192 @@
+{% extends "layout.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container-fluid pt-3">
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white py-3">
+            <h5 class="m-0 text-primary fw-semibold d-flex align-items-center" style="font-size: 1.1rem;">
+                <i class="bi {% if form.instance.pk %}bi-pencil-square{% else %}bi-plus-circle{% endif %} me-2"></i> 
+                {% if form.instance.pk %}Modify Existing System Role{% else %}Define New System Role{% endif %}
+            </h5>
+            <p class="text-muted small mb-0">
+                {% if form.instance.pk %}Update attributes and security permissions for {{ form.instance.name }}.{% else %}Create a system role and configure permissions.{% endif %}
+            </p>
+        </div>
+
+        <div class="card-body p-4">
+            <form method="post" class="small">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <h6 class="text-secondary mb-2 fw-bold">Role Details</h6>
+
+                        <div class="mb-3">
+                            {{ form.name.label_tag }}
+                            {% render_field form.name class="form-control form-control-sm" placeholder="Enter role name" %}
+                            {% for error in form.name.errors %}
+                                <small class="text-danger d-block mt-1">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.description.label_tag }}
+                            {% render_field form.description class="form-control form-control-sm" placeholder="Provide a brief functional summary..." %}
+                            {% for error in form.description.errors %}
+                                <small class="text-danger d-block mt-1">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+
+                        <h6 class="text-secondary mt-4 mb-2 fw-bold">Assigned Security Access Codenames</h6>
+                        <div class="border p-3 rounded bg-light">
+                            <div class="form-group">
+                                <label class="mb-2 fw-semibold">Permissions Registry</label>
+                                <div class="row px-3">
+                                    {% for checkbox in form.permissions %}
+                                        <div class="col-md-4 mb-2">
+                                            <div class="form-check">
+                                                {{ checkbox.tag }}
+                                                <label class="form-check-label ms-1">{{ checkbox.choice_label }}</label>
+                                            </div>
+                                        </div>
+                                    {% empty %}
+                                        <div class="col-12">
+                                            <p class="text-muted mb-0 italic small">No permissions defined in the system repository yet.</p>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% for error in form.permissions.errors %}
+                                    <small class="text-danger d-block mt-1">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger small mt-3">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="border-top pt-3 mt-4">
+                    <button type="submit" class="btn btn-primary btn-sm px-4">
+                        <i class="bi bi-save me-1"></i> {% if form.instance.pk %}Apply Modifications{% else %}Save Position{% endif %}
+                    </button>
+                    <a href="{% url 'accounts:manage_roles' %}" class="btn btn-outline-secondary btn-sm ms-2 px-4">
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+{% comment %} {% extends "layout.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+
+
+{% block content %}
+
+<div class="container-fluid pt-3">
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white py-3">
+            <h5 class="m-0 text-primary fw-semibold d-flex align-items-center" style="font-size: 1.1rem;">
+                <i class="bi bi-plus-circle me-2"></i> Define New System Role
+            </h5>
+            <p class="text-muted small mb-0">
+                Create a system role and configure permissions.
+            </p>
+        </div>
+
+        <div class="card-body p-4">
+
+            <form method="post" class="small">
+                {% csrf_token %}
+
+                <!-- FORM CONTENT -->
+                <div class="row">
+                    <div class="col-lg-6">
+
+                        <h6 class="text-secondary mb-2 fw-bold">Role Details</h6>
+
+                        <div class="mb-3">
+                            {{ form.name.label_tag }}
+                            {% render_field form.name class="form-control form-control-sm" placeholder="Enter role name" %}
+                            {% for error in form.name.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+
+                        <h6 class="text-secondary mt-4 mb-2 fw-bold">Role Permissions</h6>
+
+                        <div class="border p-3 rounded bg-light">
+
+                            <div class="form-check mb-2">
+                                {% render_field form.can_create_user class="form-check-input" %}
+                                <label class="form-check-label" for="{{ form.can_create_user.id_for_label }}">
+                                    {{ form.can_create_user.label }}
+                                </label>
+                            </div>
+
+                            <div class="form-check">
+                                {% render_field form.can_assign_staff class="form-check-input" %}
+                                <label class="form-check-label" for="{{ form.can_assign_staff.id_for_label }}">
+                                    {{ form.can_assign_staff.label }}
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Permissions</label>
+                                <div class="row px-3">
+                                    {% for checkbox in form.permissions %}
+                                        <div class="col-md-4 mb-2">
+                                            <div class="custom-control custom-checkbox">
+                                                {{ checkbox.tag }}
+                                                <label class="custom-control-label">{{ checkbox.choice_label }}</label>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger small mt-3">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <!-- ACTION BUTTONS -->
+                <div class="border-top pt-3 mt-4">
+                    <button type="submit" class="btn btn-primary btn-sm px-4">
+                        <i class="bi bi-save me-1"></i> Save
+                    </button>
+
+                    <a href="{% url 'accounts:manage_roles' %}" class="btn btn-outline-secondary btn-sm ms-2 px-4">
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %} {% endcomment %}

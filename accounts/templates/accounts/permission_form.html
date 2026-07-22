@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container-fluid pt-3">
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white py-3">
+            <h5 class="m-0 text-primary fw-semibold d-flex align-items-center" style="font-size: 1.1rem;">
+                <i class="bi {% if form.instance.pk %}bi-key-fill{% else %}bi-key{% endif %} me-2"></i> 
+                {% if form.instance.pk %}Update Permission Signature{% else %}Register New Permission Key{% endif %}
+            </h5>
+            <p class="text-muted small mb-0">
+                {% if form.instance.pk %}Modifying the global backend declaration for validation queries.{% else %}Define an explicit string token for code mixin access gates.{% endif %}
+            </p>
+        </div>
+
+        <div class="card-body p-4">
+            <form method="post" class="small">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <h6 class="text-secondary mb-3 fw-bold">Token Signatures</h6>
+
+                        <div class="mb-3">
+                            {{ form.name.label_tag }}
+                            {% render_field form.name class="form-control form-control-sm" placeholder="e.g., Can Edit Inventory" %}
+                            {% for error in form.name.errors %}
+                                <small class="text-danger d-block mt-1">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.codename.label_tag }}
+                            
+                            {% if form.instance.pk %}
+                                {% render_field form.codename class="form-control form-control-sm font-monospace" readonly="readonly" %}
+                                
+                                <div class="form-text text-warning small mt-1">
+                                    <i class="bi bi-exclamation-triangle"></i> String identifiers are locked during update mode to keep view mixin references safe.
+                                </div>
+                            {% else %}
+                                {% render_field form.codename class="form-control form-control-sm font-monospace" placeholder="e.g., can_edit_inventory" %}
+                            {% endif %}
+                            
+                            {% for error in form.codename.errors %}
+                                <small class="text-danger d-block mt-1">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger small mt-3">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="border-top pt-3 mt-4">
+                    <button type="submit" class="btn btn-primary btn-sm px-4">
+                        <i class="bi bi-save me-1"></i> {% if form.instance.pk %}Commit Key{% else %}Save Token{% endif %}
+                    </button>
+                    <a href="{% url 'accounts:manage_permissions' %}" class="btn btn-outline-secondary btn-sm ms-2 px-4">
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

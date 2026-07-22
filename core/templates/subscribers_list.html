@@ -1,0 +1,148 @@
+{% extends "layout.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container-fluid bg-light py-3 py-md-4 min-vh-100">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Subscriber Hub</h2>
+            <p class="text-muted mb-0">Managing <span id="total-count">{{ subscribers.count }}</span> active connections.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'core:download_subscribers_csv' %}" class="btn btn-outline-primary fw-bold shadow-sm px-4 rounded-pill">
+                <i class="bi bi-cloud-download me-2"></i>Export List
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-8 order-2 order-lg-1">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-0">
+                    <div class="input-group input-group-sm border rounded-pill px-3 py-1">
+                        <span class="input-group-text bg-transparent border-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="subscriber-search" class="form-control border-0 shadow-none" placeholder="Search by email or region...">
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="subscriber-table">
+                        <thead class="table-light">
+                            <tr class="small text-muted text-uppercase">
+                                <th class="ps-4">Subscriber</th>
+                                <th class="d-none d-md-table-cell">Region</th>
+                                <th class="d-none d-sm-table-cell text-center">Joined</th>
+                                <th class="text-center pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in subscribers %}
+                            <tr class="subscriber-row">
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark text-truncate search-email" style="max-width: 250px;">
+                                        {{ sub.email }}
+                                    </div>
+                                    <div class="d-md-none small text-muted">
+                                        <i class="bi bi-geo-alt"></i> <span class="search-region">{{ sub.region|default:"Unknown" }}</span>
+                                    </div>
+                                </td>
+                                <td class="d-none d-md-table-cell">
+                                    <span class="text-muted small search-region">{{ sub.region|default:"Detecting..." }}</span>
+                                </td>
+                                <td class="d-none d-sm-table-cell text-center text-muted small">
+                                    {{ sub.date_subscribed|date:"M d, Y" }}
+                                </td>
+                                <td class="text-center pe-4">
+                                    <form method="post" action="{% url 'core:delete_subscriber' sub.id %}" onsubmit="return confirm('Delete this subscriber?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr id="empty-row">
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    No subscribers found in database.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr id="no-results" style="display: none;">
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    No subscribers match your search.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4 order-1 order-lg-2">
+            <div class="sticky-sidebar">
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-plus-circle-fill me-2"></i>Quick Add</h6>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                {% render_field form.email class="form-control border-2 shadow-none" placeholder="Email Address" %}
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm">Add Subscriber</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3 text-success"><i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Bulk Import</h6>
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-3 p-3 border border-dashed rounded-3 bg-light text-center">
+                                <i class="bi bi-upload fs-3 text-muted mb-2 d-block"></i>
+                                <input type="file" name="csv_file" class="form-control form-control-sm" accept=".csv" required>
+                                <div class="form-text x-small mt-2">Column 1 must be emails.</div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 fw-bold py-2 shadow-sm">Upload CSV</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small { font-size: 0.72rem; }
+    .border-dashed { border-style: dashed !important; border-width: 2px !important; }
+    @media (min-width: 992px) { .sticky-sidebar { position: sticky; top: 20px; } }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $("#subscriber-search").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        var visibleRows = 0;
+
+        $(".subscriber-row").filter(function() {
+            var email = $(this).find(".search-email").text().toLowerCase();
+            var region = $(this).find(".search-region").text().toLowerCase();
+            var matches = email.indexOf(value) > -1 || region.indexOf(value) > -1;
+            
+            $(this).toggle(matches);
+            if(matches) visibleRows++;
+        });
+
+        // Show/Hide "No Results" message
+        if (visibleRows === 0 && $(".subscriber-row").length > 0) {
+            $("#no-results").show();
+        } else {
+            $("#no-results").hide();
+        }
+    });
+});
+</script>
+{% endblock %}

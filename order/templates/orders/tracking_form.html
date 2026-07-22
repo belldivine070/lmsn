@@ -1,0 +1,96 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4 mb-5" style="max-width: 680px;">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small bg-transparent p-0 mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'orders:tracking_list' %}" class="text-decoration-none">Tracking List</a></li>
+            <li class="breadcrumb-item active text-muted" aria-current="page">
+                {% if object %}Modify Template{% else %}New Template{% endif %}
+            </li>
+        </ol>
+    </nav>
+
+    <div class="card p-4 shadow-sm border-0 bg-white">
+        <div class="mb-4">
+            <h3 class="h4 mb-1 text-dark font-weight-bold">
+                {% if object %}Modify Existing Template{% else %}Configure Tracking Milestone Template{% endif %}
+            </h3>
+            <p class="text-muted small mb-0">
+                {% if object %}Updating this text adjustments fields globally across tracking log select workflows.{% else %}Define reusable message responses to accelerate customer pipeline updates.{% endif %}
+            </p>
+        </div>
+        
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            {% if not object and form.predefined_message %}
+                <div class="mb-4 p-3 bg-light border rounded-3">
+                    <label class="form-label text-primary font-weight-bold small mb-1">
+                        <i class="bi bi-lightning-charge-fill me-1"></i> Quick Load System Seeding Choices
+                    </label>
+                    {{ form.predefined_message }}
+                    <div class="form-text text-muted small mt-1">
+                        Selecting an option above will instantly overwrite the customer alert field below.
+                    </div>
+                </div>
+                <hr class="my-4 text-muted opacity-25">
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="id_order_status" class="form-label font-weight-bold text-dark small mb-1">Target Order Pipeline Phase State</label>
+                {{ form.order_status }}
+                {% if form.order_status.errors %}
+                    <div class="text-danger small mt-1">{{ form.order_status.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_message" class="form-label font-weight-bold text-dark small mb-1">Customer-Facing Notification Text Message</label>
+                {{ form.message }}
+                {% if form.message.errors %}
+                    <div class="text-danger small mt-1">{{ form.message.errors|striptags }}</div>
+                {% endif %}
+                <div class="form-text text-muted small">This is the milestone narrative text statement exposed directly to your consumers.</div>
+            </div>
+
+            <div class="mb-4">
+                <label for="id_description" class="form-label font-weight-bold text-dark small mb-1">Internal Reference Memo Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="text-danger small mt-1">{{ form.description.errors|striptags }}</div>
+                {% endif %}
+                <div class="form-text text-muted small">Internal details or operations criteria checklist instructions for administrative staff.</div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-end gap-2 border-top pt-3 mt-4">
+                <a href="{% url 'orders:tracking_list' %}" class="btn btn-light border px-4 py-2 font-weight-medium">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary px-4 py-2 font-weight-bold shadow-sm">
+                    {% if object %}Save System Modification{% else %}Save New Template Milestone{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const templateDropdown = document.getElementById('id_predefined_message');
+        const messageTextarea = document.getElementById('id_message');
+
+        if (templateDropdown && messageTextarea) {
+            templateDropdown.addEventListener('change', function () {
+                // Instantly extract text contents from active element item
+                const selectedText = this.options[this.selectedIndex].text;
+                
+                // If a valid ID is selected, update textarea content
+                if (this.value) {
+                    messageTextarea.value = selectedText;
+                }
+            });
+        }
+    });
+</script>
+{% endblock content %}

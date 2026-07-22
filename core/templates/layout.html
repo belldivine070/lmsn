@@ -1,0 +1,641 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{% block title %}Admin Dashboard{% endblock title %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"> 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{% static 'core/css/jquery.datetimepicker.min.css' %}">
+    <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'core/css/dropify.css' %}">
+    <link rel="stylesheet" href="{% static 'products/css/style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'assets/images/image.png' %}">
+
+    {% if form.media %}
+        {{ form.media }}
+    {% endif %}
+
+    <style>
+        /* =========================================================================
+           PREMIUM ARCHITECTURE COMPONENT SYSTEM RULES (THEME ROOT VARIABLES)
+        ========================================================================= */
+        :root {
+            --primary: #ff6b00;
+            --primary-dark: #e55a00;
+            --primary-light: rgba(255, 107, 0, 0.15);
+            --sidebar-w: 260px;
+            --navbar-h: 70px;
+            --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Light Theme Mapping Configs */
+            --app-bg: #f8fafc;
+            --navbar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #f1f5f9;
+            --sidebar-bg: #0f172a;
+            --sidebar-text: #94a3b8;
+            --sidebar-hover-bg: #1e293b;
+        }
+
+        /* Dim Theme System Context Variant Maps */
+        body[data-theme="dim"] {
+            --app-bg: #0b0f19;
+            --navbar-bg: #111827;
+            --card-bg: #1f2937;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #374151;
+            --sidebar-bg: #111827;
+            --sidebar-text: #94a3b8;
+            --sidebar-hover-bg: #1f2937;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--app-bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Global Styling Normalizations */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        body[data-theme="dim"]::-webkit-scrollbar-thumb { background: #4b5563; }
+
+        /* =========================================================================
+           LAYOUT WRAPPER COMPONENTS MAPS
+        ========================================================================= */
+        .admin-layout-wrapper {
+            display: flex;
+            min-height: calc(100vh - var(--navbar-h));
+            position: relative;
+        }
+
+        /* Navbar Layout Controls */
+        .navbar-custom {
+            height: var(--navbar-h);
+            background-color: var(--navbar-bg);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1030;
+            transition: var(--transition-smooth);
+        }
+
+        .search-container input {
+            background-color: var(--app-bg) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border-color) !important;
+            padding-left: 2.75rem;
+            transition: var(--transition-smooth);
+        }
+        .search-container input:focus {
+            box-shadow: 0 0 0 3px var(--primary-light) !important;
+            border-color: var(--primary) !important;
+        }
+        .search-container i {
+            color: var(--text-muted);
+            left: 1rem;
+        }
+
+        /* Sidebar Structural Canvas Rules */
+        #sidebar {
+            width: var(--sidebar-w);
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: var(--navbar-h);
+            bottom: 0;
+            left: 0;
+            z-index: 1020;
+            overflow-y: auto;
+            transition: var(--transition-smooth);
+        }
+
+        #sidebar.collapsed {
+            left: calc(-1 * var(--sidebar-w));
+        }
+
+        /* Sidebar Navigation Controls Properties */
+        #sidebar .nav-link {
+            color: var(--sidebar-text);
+            font-weight: 500;
+            font-size: 14px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            transition: var(--transition-smooth);
+        }
+
+        #sidebar .nav-link:hover {
+            background-color: var(--sidebar-hover-bg);
+            color: #ffffff;
+        }
+
+        #sidebar .nav-link.active {
+            background-color: var(--primary) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.25);
+        }
+
+        /* Submenu Layout Structuring Mapping */
+        .submenu-list {
+            padding-left: 1.5rem;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .submenu-list::before {
+            content: '';
+            position: absolute;
+            left: 14px;
+            top: 0;
+            bottom: 10px;
+            width: 1px;
+            background-color: var(--border-color);
+            opacity: 0.3;
+        }
+        .submenu-list .nav-link {
+            font-size: 13px !important;
+            padding: 7px 12px !important;
+        }
+
+        /* Main Context Content Canvas Layout blocks */
+        .content-wrapper {
+            margin-left: var(--sidebar-w);
+            width: calc(100% - var(--sidebar-w));
+            transition: var(--transition-smooth);
+            min-height: 100%;
+        }
+
+        .content-wrapper.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        /* Interactive Standard Utility Panels */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            transition: var(--transition-smooth);
+        }
+        .dropdown-menu {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+        .dropdown-item {
+            color: var(--text-main);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .dropdown-item:hover {
+            background-color: var(--app-bg);
+            color: var(--primary);
+        }
+
+        #mobileOverlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1010;
+            display: none;
+        }
+
+        /* Screen Breakpoint Adaptations Panels mapping scales */
+        @media (max-width: 992px) {
+            #sidebar { left: calc(-1 * var(--sidebar-w)); }
+            #sidebar.active-mobile { left: 0; }
+            .content-wrapper { margin-left: 0; width: 100%; }
+        }
+    </style>
+</head>
+
+<body id="mainBody" data-theme="dim">
+
+    <nav id="navbar" class="navbar navbar-expand-lg navbar-custom sticky-top px-3">
+        <div class="container-fluid p-0 d-flex align-items-center justify-content-between">
+            
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn border-0 p-2 d-flex align-items-center justify-content-center rounded-circle" id="sidebarToggle" type="button" style="background-color: var(--app-bg);">
+                    <i class="bi bi-list fs-5" style="color: var(--text-main);"></i>
+                </button>
+                <a class="navbar-brand fw-bold tracking-tight text-uppercase fs-6 ms-1 mb-0" href="/" style="color: var(--text-main); letter-spacing: 0.5px;">
+                    Admin<span style="color: var(--primary);">Panel</span>
+                </a>
+            </div>
+
+            <div class="search-container d-none d-md-block position-relative w-50 max-w-lg mx-auto">
+                <i class="bi bi-search position-absolute top-50 translate-middle-y"></i>
+                <input class="form-control border-0 rounded-3 text-start shadow-none" type="search" placeholder="Search operational indices, modules, logs...">       
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn border-0 p-2 d-flex align-items-center justify-content-center rounded-circle" id="dimModeToggle" type="button" style="background-color: var(--app-bg);" title="Toggle System Mode Variant">
+                    <i id="lightIcon" class="bi bi-sun-fill text-warning d-none"></i>
+                    <i id="dimIcon" class="bi bi-moon-stars-fill text-secondary"></i>
+                </button>
+
+                <div class="dropdown">
+                    <a class="d-flex align-items-center text-decoration-none dropdown-toggle gap-2" href="#" data-bs-toggle="dropdown" style="color: var(--text-main);">
+                        <img src="{% if user.image %}{{ user.image.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" width="38" height="38" class="rounded-circle border border-2 border-light-subtle shadow-sm" style="object-fit:cover;">
+                        <div class="d-none d-lg-block text-start">
+                            <div class="fw-semibold lh-1" style="font-size: 13.5px;">{{ user.get_full_name|default:user.username }}</div> 
+                            <small class="text-muted small" style="font-size: 11px;">Administrator</small> 
+                        </div> 
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2 mt-2">
+                        <li>
+                            <div class="px-3 py-2 bg-light-subtle rounded-2 mb-2">
+                                <div class="fw-bold small text-truncate">{{ user.get_full_name|default:user.username }}</div>
+                                <small class="text-muted text-truncate d-block" style="font-size: 11.5px;">{{ user.email }}</small>
+                            </div>
+                        </li>
+                        <li><a class="dropdown-item py-2" href="{% url 'accounts:profile' %}"><i class="bi bi-person-gear me-2 text-secondary"></i> Profile Settings</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'accounts:password_reset' %}"><i class="bi bi-shield-lock me-2 text-secondary"></i> Change Password</a></li>
+                        <li><hr class="dropdown-divider my-2 opacity-50"></li>
+                        <li> 
+                            <form action="{% url 'accounts:logout' %}" method="post" class="m-0"> 
+                                {% csrf_token %} 
+                                <button type="submit" class="dropdown-item text-danger py-2 w-100 border-0 bg-transparent text-start">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                                </button> 
+                            </form> 
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </nav>
+
+    <div class="admin-layout-wrapper">
+
+        <div id="sidebar" class="p-3">
+            <ul class="nav nav-pills flex-column mb-auto" id="dashboardNavbarContainer">
+                <li class="nav-item">
+                    <a href="{% url 'core:index' %}" class="nav-link">
+                        <i class="bi bi-grid-1x2-fill me-2.5"></i> Dashboard Home
+                    </a>
+                </li>
+
+                <li>
+                    <a data-bs-toggle="collapse" href="#CategoryMenu" class="nav-link">
+                        <i class="bi bi-tags-fill me-2.5"></i> Categories
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="CategoryMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'core:category_list' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> List All</a></li>
+                            <li><a href="{% url 'core:category_create' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Add New</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <a data-bs-toggle="collapse" href="#WidgetMenu" class="nav-link">
+                        <i class="bi bi-layers-half me-2.5"></i> Widgets
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="WidgetMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'core:widget_list' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> List All</a></li>
+                            <li><a href="{% url 'core:widget_create' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Add New</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <a data-bs-toggle="collapse" href="#ProductMenu" class="nav-link">
+                        <i class="bi bi-box-seam-fill me-2.5"></i> Products 
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="ProductMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'products:category_list' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Product Category</a></li>
+                            <li><a href="{% url 'products:category_create' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Add Category</a></li>
+                            <li><a href="{% url 'products:all_products' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> All Products</a></li>
+                            <li><a href="{% url 'products:product_create' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Add Product</a></li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <li>
+                    <a data-bs-toggle="collapse" href="#InventoryMenu" class="nav-link">
+                        <i class="bi bi-boxes me-2.5"></i> Inventory 
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="InventoryMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'products:inventory' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Inventory List</a></li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <li>
+                    <a data-bs-toggle="collapse" href="#BrandMenu" class="nav-link">
+                        <i class="bi bi-bookmark-star-fill me-2.5"></i> Brands 
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="BrandMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'products:brand_list' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> List Brands</a></li>
+                            <li><a href="{% url 'products:brand_create' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Add Brand</a></li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <li>
+                    <a data-bs-toggle="collapse" href="#OrderMenu" class="nav-link">
+                        <i class="bi bi-cart-fill me-2.5"></i> Orders 
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="OrderMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'orders:orders_list' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> All Orders</a></li>
+                            <li><a href="{% url 'orders:order_list' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Processing Orders</a></li>
+                            <li><a href="{% url 'orders:delivered_order_list' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Cancelled / Delivered</a></li>
+                        </ul>
+                    </div>
+                </li>
+               
+                <li>
+                    <a data-bs-toggle="collapse" href="#PaymentMenu" class="nav-link">
+                        <i class="bi bi-credit-card-fill me-2.5"></i> Payments 
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="PaymentMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'payments:index' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> List Payments</a></li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <li>
+                    <a data-bs-toggle="collapse" href="#PageMenu" class="nav-link">
+                        <i class="bi bi-file-earmark-text-fill me-2.5"></i> Pages 
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="PageMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'core:page_list' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> List Pages</a></li>
+                            <li><a href="{% url 'core:page_create' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Create Pages</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <a data-bs-toggle="collapse" href="#SupplyMenu" class="nav-link">
+                        <i class="bi bi-truck-flatbed me-2.5"></i> Suppliers 
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="SupplyMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'products:supplier_list' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> List Suppliers</a></li>
+                            <li><a href="{% url 'products:supplier_create' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Add Supplier</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <a data-bs-toggle="collapse" href="#commMenu" class="nav-link">
+                        <i class="bi bi-megaphone-fill me-2.5"></i> Communications
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="commMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'core:broadcast_dashboard' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Email Broadcasts</a></li>
+                            <li><a href="{% url 'core:subscriber_list' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Subscribers</a></li>
+                            <li><a href="{% url 'core:support_deck' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Support Tickets</a></li>
+                        </ul>
+                    </div>
+                </li>
+              
+                <li>
+                    <a data-bs-toggle="collapse" href="#MediaMenu" class="nav-link">
+                        <i class="bi bi-images me-2.5"></i> Media Gallery
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="MediaMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'core:media_library' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Media Library</a></li>
+                            <li><a href="{% url 'core:media_upload' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Upload Media</a></li>
+                            <li><a href="{% url 'core:media_categories' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Media Category</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                {% if user.is_authenticated and user.is_staff %}
+                <li>
+                    <a data-bs-toggle="collapse" href="#coreMenu" class="nav-link" aria-expanded="false">
+                        <i class="bi bi-shield-lock-fill me-2.5"></i> Core & Roles
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="coreMenu">
+                        <ul class="nav flex-column submenu-list">
+                            {% if user.is_superuser %}
+                                <li><a href="{% url 'accounts:manage_users' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Manage Staff</a></li>
+                                <li><a href="{% url 'accounts:manage_roles' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Manage Roles</a></li>
+                                <li><a href="{% url 'accounts:manage_departments' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Manage Depts</a></li>
+                                <li><a href="{% url 'accounts:manage_permissions' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Core Permissions</a></li>
+                            {% endif %}
+                            <li><a href="{% url 'accounts:manage_customers' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> List Customers</a></li>
+                            <li><a href="{% url 'orders:tracking_list' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> List Tracking</a></li>
+                            <li><a href="{% url 'orders:tracking_create' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Create Tracking</a></li>
+                        </ul>
+                    </div>
+                </li>
+                {% endif %}
+
+                {% if user.is_superuser %}
+                <li>
+                    <a data-bs-toggle="collapse" href="#settingsMenu" class="nav-link" aria-expanded="false">
+                        <i class="bi bi-shield-lock-fill me-2.5"></i> Settings
+                        <i class="bi bi-chevron-down ms-auto small collapse-chevron"></i>
+                    </a>
+                    <div class="collapse" id="settingsMenu">
+                        <ul class="nav flex-column submenu-list">
+                            <li><a href="{% url 'core:site_settings' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Site Details</a></li>
+                            <li><a href="{% url 'core:security_audit' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Security Audits</a></li>
+                            <li><a href="{% url 'core:activity_logs' %}" class="nav-link small"><i class="bi bi-circle me-2"></i> Activity Logs</a></li>
+                        </ul>
+                    </div>
+                </li>
+                {% endif %}
+
+            </ul>
+        </div>
+
+        <main id="content" class="content-wrapper p-3 p-md-4">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm border-0 mb-4 rounded-3 p-3" role="alert">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span class="small fw-semibold">{{ message }}</span>
+                    </div>
+                    <button class="btn-close small" data-bs-dismiss="alert" aria-label="Close" style="top: 14px;"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="container-fluid p-0">
+                {% block subcontent %}
+                
+                {% endblock subcontent %}
+
+                <div class="container-fluid">
+                    {% block content %}
+                    
+                    {% endblock content %}
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="mobileOverlay"></div>
+    <button id="backToTop" class="btn btn-primary shadow rounded-circle d-flex align-items-center justify-content-center" style="position: fixed; bottom: 25px; right: 25px; display: none; z-index: 1000; background-color: var(--primary); border: none; width: 42px; height: 42px;">
+        <i class="bi bi-arrow-up-short fs-4"></i>
+    </button>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'core/js/jquery.datetimepicker.full.min.js' %}"></script>
+    <script src="{% static 'core/js/main.js' %}"></script>
+    <script src="{% static 'core/js/dropify.js' %}"></script>
+    <script src="{% static 'core/js/media.js' %}"></script>
+    <script src="{% static 'core/js/media.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+        $(document).ready(function () {
+            // Dynamic theme controller routine
+            const savedTheme = localStorage.getItem('admin-theme') || 'dim';
+            $('body').attr('data-theme', savedTheme);
+            toggleThemeToggleIcons(savedTheme);
+
+            $('#dimModeToggle').click(function() {
+                const updatedTheme = $('body').attr('data-theme') === 'dim' ? 'light' : 'dim';
+                $('body').attr('data-theme', updatedTheme);
+                localStorage.setItem('admin-theme', updatedTheme);
+                toggleThemeToggleIcons(updatedTheme);
+            });
+
+            function toggleThemeToggleIcons(theme) {
+                if (theme === 'dim') {
+                    $('#lightIcon').removeClass('d-none');
+                    $('#dimIcon').addClass('d-none');
+                } else {
+                    $('#lightIcon').addClass('d-none');
+                    $('#dimIcon').removeClass('d-none');
+                }
+            }
+
+            // Mobile Responsive Menu drawer runtime engine map
+            $('#sidebarToggle').click(function() {
+                if ($(window).width() <= 992) {
+                    $('#sidebar').toggleClass('active-mobile');
+                    $('#mobileOverlay').fadeToggle(200);
+                } else {
+                    $('#sidebar').toggleClass('collapsed');
+                    $('.content-wrapper').toggleClass('expanded');
+                }
+            });
+
+            $('#mobileOverlay').click(function() {
+                $('#sidebar').removeClass('active-mobile');
+                $(this).fadeOut(200);
+            });
+
+            // Back to Top functionality tracking node configurations
+            $(window).scroll(function() {
+                if ($(this).scrollTop() > 300) {
+                    $('#backToTop').fadeIn(200);
+                } else {
+                    $('#backToTop').fadeOut(200);
+                }
+            });
+            $('#backToTop').click(function() {
+                $('html, body').animate({scrollTop : 0}, 400);
+                return false;
+            });
+
+            // Datetimepicker Canvas context mapping hook
+            $('.datetimepicker, #datetimepicker').datetimepicker({
+                format: 'Y-m-d H:i',
+                timepicker: true,
+                datepicker: true,
+                step: 15
+            });
+
+            // Active Path Route matching layout highlighting loop engine
+            const currentPath = window.location.pathname;
+            let targetMatched = false;
+
+            $('#sidebar .nav-link').each(function() {
+                const linkUrl = $(this).attr('href');
+                if (linkUrl && linkUrl !== '/' && currentPath.startsWith(linkUrl)) {
+                    $(this).addClass('active');
+                    targetMatched = true;
+                    
+                    const nestedMenuCollapse = $(this).closest('.collapse');
+                    if (nestedMenuCollapse.length) {
+                        nestedMenuCollapse.addClass('show');
+                        const toggleTrigger = $(`a[href="#${nestedMenuCollapse.attr('id')}"]`);
+                        toggleTrigger.addClass('active fw-bold');
+                        toggleTrigger.find('.collapse-chevron').css('transform', 'rotate(180deg)');
+                    }
+                }
+            });
+
+            if (!targetMatched && currentPath === '/') {
+                $('#sidebar .nav-item:first-child .nav-link').addClass('active');
+            }
+
+            // Auto Chevron Icon rotation animation parameters mapping
+            $('.collapse').on('show.bs.collapse', function () {
+                $(`a[href="#${this.id}"]`).find('.collapse-chevron').css({'transform': 'rotate(180deg)'});
+            }).on('hide.bs.collapse', function () {
+                $(`a[href="#${this.id}"]`).find('.collapse-chevron').css({'transform': 'rotate(0deg)'});
+            });
+        });
+
+        // SweetAlert permanent context destruction guard validation pipeline
+        document.addEventListener('htmx:confirm', function(evt) {
+            if (!evt.target.hasAttribute('hx-confirm-js')) return;
+            evt.preventDefault();
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This operation will permanently impact system data records!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff6b00',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, execute operation',
+                background: getComputedStyle(document.documentElement).getPropertyValue('--card-bg'),
+                color: getComputedStyle(document.documentElement).getPropertyValue('--text-main')
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    evt.detail.issueRequest();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

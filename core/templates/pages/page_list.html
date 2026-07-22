@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2"><i class="bi bi-folder-fill me-2 text-primary"></i>Dynamic Pages</h1>
+    <a href="{% url 'core:page_create' %}" class="btn btn-primary shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Build New Page
+    </a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Page Title</th>
+                    <th>Url Slug</th>
+                    <th>Template Type</th>
+                    <th>Status</th>
+                    <th>Visibility Rules</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page in pages %}
+                <tr id="page-row-{{ page.pk }}">
+                    <td>
+                        <a href="{% url 'core:section_list' page.pk %}"> <strong class="d-block text-dark mb-0">{{ page.title }}</strong> </a>
+                        {% if page.template == 'homepage' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle mt-1">Home Route</span>
+                        {% endif %}
+                    </td>
+                    <td><code>/{{ page.slug }}</code></td>
+                    <td><span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">{{ page.get_template_display }}</span></td>
+                    <td>
+                        {% if page.status == 'published' %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Live</span>
+                        {% elif page.status == 'draft' %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-pencil me-1"></i>Draft</span>
+                        {% else %}
+                            <span class="badge bg-secondary"><i class="bi bi-archive me-1"></i>Archived</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if page.is_active %}<span class="text-success small fw-medium">Active</span>{% else %}<span class="text-muted small">Hidden</span>{% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group shadow-sm btn-group-sm">
+                            <a href="{% url 'core:page_update' page.pk %}" class="btn btn-outline-primary" title="Edit Full Page Template">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+
+                            {% if not page.post_count or page.post_count == 0 %}
+                                <a href="{% url 'core:page_delete' page.pk %}" 
+                                   class="btn btn-outline-danger" 
+                                   onclick="return confirm('Are you sure you want to permanently drop this layout framework page?');"
+                                   title="Delete Page Layout">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            {% else %}
+                                <button type="button" class="btn btn-outline-secondary" disabled title="Cannot delete: {{ page.post_count }} posts exist">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="bi bi-file-earmark-plus display-1 mb-3 d-block text-secondary"></i>
+                        No pages structured inside the environment framework yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

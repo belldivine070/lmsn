@@ -1,0 +1,76 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Product Categories</h3>
+        <a href="{% url 'products:category_create' %}" class="btn btn-primary px-4">Add Category</a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Category</th>
+                        <th>Description</th>
+                        <th>Product Count</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat in categories %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3 border rounded bg-light d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; overflow: hidden;">
+                                    {% if cat.image %}
+                                        {# Check if the asset is a video #}
+                                        {% if "video" in cat.image.file.url or ".mp4" in cat.image.file.url %}
+                                            <i class="bi bi-play-circle-fill text-primary fs-4"></i>
+                                        {% else %}
+                                            <img src="{{ cat.image.file.url }}" alt="{{ cat.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                        {% endif %}
+                                    {% else %}
+                                        <i class="bi bi-image text-muted opacity-50"></i>
+                                    {% endif %}
+                                </div>
+
+                                <div>
+                                    <a href="{% url 'products:product_list_by_category' cat.pk %}" class="text-decoration-none fw-bold text-dark">
+                                        {{ cat.name }}
+                                    </a>
+                                    {% if cat.image %}
+                                        <span class="badge bg-info-subtle text-info" style="font-size: 0.65rem;">
+                                            {{ cat.image.title|truncatechars:15 }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-muted small">{{ cat.description|default:"No description"|truncatechars:100 }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ cat.total_products }} Items</span></td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'products:category_update' cat.pk %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a href="{% url 'products:category_delete' cat.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            No categories found. <a href="{% url 'products:category_create' %}">Create one?</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

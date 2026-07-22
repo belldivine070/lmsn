@@ -1,0 +1,167 @@
+{% extends "layout.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% load category_tags %}
+
+
+{% block subcontent %}
+   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div class="mb-3 mb-md-0 text-center text-md-start">
+            <h2 class="h3 mb-1 text-dark fw-bold">All Widgets</h2>
+            <p class="text-muted small mb-0">Manage your content widgets and visibility</p>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-center align-items-center">
+            <a href="#" class="btn btn-link text-decoration-none text-muted small pe-3 border-end">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+            <a href="{% url 'core:widget_create' %}" class="btn-add-custom">
+                <i class="bi bi-plus-square"></i> <span>Add New Widget</span>
+            </a>
+        </div>
+    </div>
+{% endblock  %}
+
+{% block content %}
+<div class="container-fluid mt-3 mt-md-4"> 
+
+    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0 custom-fade-table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4" style="width: 5%;">#</th>
+                            <th style="width: 20%;">Widget</th>
+                            <th class="d-none d-lg-table-cell" style="width: 15%;">Slug</th> 
+                            <th class="d-none d-lg-table-cell" style="width: 25%;">Used Fields</th> 
+                            <th class="text-center" style="width: 10%;">Status</th>
+                            <th class="text-center" style="width: 10%;">Posts</th>
+                            <th class="text-end pe-4" style="width: 15%;">Action</th> 
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for widget in widgets %}
+                        <tr>
+                            <td class="ps-4 text-muted small">{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url 'core:post_list_by_widget' widget_slug=widget.slug %}" class="text-decoration-none">
+                                    <div class="fw-bold text-dark">{{ widget.title }}</div>
+                                </a>
+                                <small class="text-muted d-lg-none">{{ widget.slug }}</small>
+                            </td>
+
+                            <td class="d-none d-lg-table-cell">
+                                <code class="text-primary small bg-light px-2 py-1 rounded">{{ widget.slug }}</code>
+                            </td> 
+                            
+                            <td class="d-none d-lg-table-cell">
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for field_slug in widget.child_fields %}
+                                        {% with field_label=POST_FIELD_CHOICES|get_item:field_slug %} 
+                                            <span class="badge field-badge">{{ field_label|default:field_slug }}</span>
+                                        {% endwith %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                <span class="badge badge-active-pill">Active</span>
+                            </td>
+
+                            <td class="text-center">
+                                <span class="badge rounded-pill bg-info-subtle text-info border border-info-subtle px-3 fw-bold">
+                                    {{ widget.post_count }}
+                                </span>
+                            </td>
+                            
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="{% url 'core:widget_update' slug=widget.slug %}" class="btn-action-edit" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    
+                                    {% if widget.post_count == 0 %}
+                                        <form method="post" action="{% url 'core:widget_delete' slug=widget.slug %}" class="d-inline" onsubmit="return confirm('Delete widget?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn-action-delete ms-1">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <button class="btn-action-disabled ms-1" disabled title="Cannot delete with posts">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table td { vertical-align: middle; }
+    
+    .btn-add-custom {
+        background-color: #0d6efd;
+        color: white !important;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex; align-items: center; gap: 8px;
+        transition: 0.3s;
+        box-shadow: 0 4px 6px rgba(13, 110, 253, 0.1);
+    }
+
+    .custom-fade-table thead th {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 15px 10px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .badge-active-pill {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        font-size: 0.65rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        border: 1px solid #badbcc;
+    }
+    
+    .field-badge {
+        background-color: white;
+        color: #495057;
+        border: 1px solid #dee2e6;
+        font-size: 0.65rem;
+        padding: 3px 8px;
+        border-radius: 4px;
+    }
+
+    .btn-action-edit, .btn-action-delete, .btn-action-disabled {
+        padding: 6px 10px; border-radius: 6px; background: white; border: 1px solid #eee; transition: 0.2s;
+    }
+    .btn-action-edit { color: #0d6efd; }
+    .btn-action-delete { color: #dc3545; }
+    .btn-action-disabled { color: #ccc; cursor: not-allowed; }
+
+    @media (max-width: 992px) {
+        .table { font-size: 0.85rem; }
+    }
+
+    @media (max-width: 576px) {
+        .btn-add-custom span { display: none; }
+        .btn-add-custom { padding: 12px; border-radius: 50%; }
+    }
+</style>
+{% endblock %}

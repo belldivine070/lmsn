@@ -1,0 +1,378 @@
+{% extends "layout.html" %} 
+
+{% load static %}
+
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <!-- Welcome Card -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body py-4">
+            <h5 class="fw-bold text-primary mb-2">Welcome To The {{ APP_NAME }} Admin Dashboard</h5>
+            <p class="text-muted small mb-0">Click on the menus at the left to post updates and more</p>
+        </div>
+    </div>
+
+    <div class="card-body px-4">
+        <h1>Welcome back, {{ user.get_full_name }}!</h1>
+        <p class="lead">Your current role is **{{ user.role.name|default:"Not Assigned" }}**.</p>
+        <hr>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card bg-primary text-white">
+                    <h4>Total Staffs</h4>
+                    <p style="font-size: 2em;">{{ total_staff_count }}</p>
+                    <p>Managed by your team.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-success text-white">
+                    <h4>Register New User</h4>
+                    <p>Quick access to the user creation form.</p>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-light btn-sm">Go to Form</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-warning text-white">
+                    <h4>Manage Roles</h4>
+                    <p>Define new roles and permissions.</p>
+                    <a href="{% url 'accounts:add_role' %}" class="btn btn-light btn-sm">Manage Roles</a>
+                </div>
+            </div>
+        </div>
+        
+        <h2 class="mt-5">Your Subordinates</h2>
+        <p class="text-muted">A list of staff assigned directly to you.</p>
+        </div>
+    </div>
+{% endblock content %}
+
+
+
+{% comment %} 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orange Marketplace | Support Center</title>
+    <style>
+        :root {
+            --primary-orange: #ff6600;
+            --dark-orange: #e05500;
+            --light-bg: #fdfdfd;
+            --sidebar-bg: #f4f5f7;
+            --border-color: #e2e8f0;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --customer-bubble: #fff3eb;
+            --admin-bubble: #f0f4f8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; height: 100vh; background-color: var(--light-bg); color: var(--text-main); overflow: hidden; }
+
+        /* Left Ticket Sidebar */
+        #sidebar {
+            width: 380px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-orange), var(--dark-orange));
+            color: white;
+        }
+        .sidebar-header h2 { font-size: 1.3rem; margin-bottom: 12px; }
+
+        /* Metric badges */
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .metric-card { background: rgba(255, 255, 255, 0.15); padding: 6px; border-radius: 6px; text-align: center; font-size: 0.75rem; }
+        .metric-card span { display: block; font-size: 1.1rem; font-weight: bold; }
+
+        /* Ticket List Scroller */
+        #ticket-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .ticket-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .ticket-item:hover { border-color: var(--primary-orange); transform: translateY(-1px); }
+        .ticket-item.active { border-left: 4px solid var(--primary-orange); background: #fffcf9; }
+        
+        .ticket-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+        .ticket-customer { font-weight: bold; font-size: 0.9rem; margin-bottom: 4px; word-break: break-all; }
+        .ticket-snippet { font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Badges */
+        .badge { padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
+        .badge-pending { background: #fee2e2; color: #ef4444; }
+        .badge-waiting { background: #fef3c7; color: #d97706; }
+        .badge-replied { background: #d1fae5; color: #059669; }
+
+        /* Main Chat Window Canvas */
+        #chat-pane { flex: 1; display: flex; flex-direction: column; height: 100%; background: #fafafa; }
+        
+        #chat-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #chat-header h3 { font-size: 1.1rem; }
+        
+        /* Message Field Box */
+        #message-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .msg-container { max-width: 70%; display: flex; flex-direction: column; gap: 4px; }
+        .msg-container.customer { align-self: flex-start; }
+        .msg-container.admin { align-self: flex-end; }
+
+        .msg-bubble { padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; }
+        .customer .msg-bubble { background: var(--customer-bubble); border-top-left-radius: 2px; border: 1px solid #ffe3d1; }
+        .admin .msg-bubble { background: var(--admin-bubble); border-top-right-radius: 2px; border: 1px solid #dbe3eb; }
+
+        .msg-info { font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 8px; }
+        .admin .msg-info { justify-content: flex-end; }
+        .msg-sender { font-weight: bold; }
+
+        /* Empty State */
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); }
+
+        /* Reply Dock */
+        #reply-dock { padding: 20px; background: white; border-top: 1px solid var(--border-color); display: flex; gap: 10px; }
+        #reply-input { flex: 1; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; font-size: 0.95rem; }
+        #reply-input:focus { border-color: var(--primary-orange); }
+        #send-btn { background: var(--primary-orange); color: white; border: none; padding: 0 24px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        #send-btn:hover { background: var(--dark-orange); }
+        #send-btn:disabled { background: var(--border-color); cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h2>Support Triage Desk</h2>
+            <div class="metrics-grid">
+                <div class="metric-card"><span id="metric-complaints">0</span>Disputes</div>
+                <div class="metric-card"><span id="metric-waiting">0</span>Waiting</div>
+                <div class="metric-card"><span id="metric-replied">0</span>Replied</div>
+            </div>
+        </div>
+        <div id="ticket-list">
+            </div>
+    </div>
+
+    <div id="chat-pane">
+        <div id="chat-header" style="display: none;">
+            <div>
+                <h3 id="active-customer-title">Select a Session</h3>
+                <p id="active-ai-status" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;"></p>
+            </div>
+        </div>
+
+        <div id="message-area">
+            <div class="empty-state">
+                <p>Select an active customer ticket from the left panel to display history logs.</p>
+            </div>
+        </div>
+
+        <div id="reply-dock" style="display: none;">
+            {% csrf_token %}
+            <input type="text" id="reply-input" placeholder="Type custom message override..." autocomplete="off">
+            <button id="send-btn" onclick="submitAdminOverride()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        let globalSelectedSessionId = null;
+        let pollingInterval = null;
+
+        // Auto-load dashboard elements right away when DOM mounts
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchDashboardOverview();
+            // Long poll refresher cycle loops every 5 seconds to catch incoming threads
+            setInterval(fetchDashboardOverview, 5000);
+            
+            // Allow hit enter to dispatch override texts natively
+            document.getElementById('reply-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') submitAdminOverride();
+            });
+        });
+
+        /**
+         * Pulls the left-side global ticket list metrics 
+         */
+        function fetchDashboardOverview() {
+            fetch(window.location.pathname, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Update header numbers 
+                    document.getElementById('metric-complaints').innerText = data.metrics.pending_complaints;
+                    document.getElementById('metric-waiting').innerText = data.metrics.awaiting_reply;
+                    document.getElementById('metric-replied').innerText = data.metrics.replied;
+
+                    const listContainer = document.getElementById('ticket-list');
+                    
+                    // Render ticket cards mapping layout parameters cleanly
+                    let htmlOutput = "";
+                    data.active_tickets.forEach(ticket => {
+                        let badgeClass = 'badge-replied';
+                        if (ticket.status === 'Pending Complaint') badgeClass = 'badge-pending';
+                        if (ticket.status === 'Customer Waiting') badgeClass = 'badge-waiting';
+
+                        const isCurrentlyActive = (ticket.session_id === globalSelectedSessionId) ? 'active' : '';
+
+                        htmlOutput += `
+                            <div class="ticket-item ${isCurrentlyActive}" onclick="selectActiveConversation('${ticket.session_id}')" id="ticket-${ticket.session_id}">
+                                <div class="ticket-meta">
+                                    <span class="badge ${badgeClass}">${ticket.status}</span>
+                                    <span>${ticket.last_active_time}</span>
+                                </div>
+                                <div class="ticket-customer">${ticket.customer}</div>
+                                <div class="ticket-snippet">${ticket.last_snippet}</div>
+                            </div>
+                        `;
+                    });
+                    listContainer.innerHTML = htmlOutput || `<p style="padding: 20px; text-align: center; color: var(--text-muted)">No active tickets.</p>`;
+                }
+            })
+            .catch(err => console.error("Error pooling listing rows:", err));
+        }
+
+        /**
+         * Triggered when a row is clicked - fetches full log entries sequentially
+         */
+        function selectActiveConversation(sessionId) {
+            globalSelectedSessionId = sessionId;
+
+            // Instantly highlight item layout active class safely
+            document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('active'));
+            const element = document.getElementById(`ticket-${sessionId}`);
+            if (element) element.classList.add('active');
+
+            // Unhide conversation visual control framework panel boxes 
+            document.getElementById('chat-header').style.display = 'flex';
+            document.getElementById('reply-dock').style.display = 'flex';
+
+            // Clear absolute execution intervals loops if present, resets poll targeting fresh workspace
+            if (pollingInterval) clearInterval(pollingInterval);
+            
+            loadDetailedChatTimeline();
+            // Keep pulling logs for open workspace every 3 seconds to update real-time streams
+            pollingInterval = setInterval(loadDetailedChatTimeline, 3000);
+        }
+
+        /**
+         * Fetches all message history records for the current session id
+         */
+        function loadDetailedChatTimeline() {
+            if (!globalSelectedSessionId) return;
+
+            fetch(`${window.location.pathname}?session_id=${globalSelectedSessionId}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.session_id === globalSelectedSessionId) {
+                    document.getElementById('active-customer-title').innerText = `Conversation with: ${data.customer_identity}`;
+                    document.getElementById('active-ai-status').innerText = data.is_ai_active ? "🤖 Autonomous AI Bot Assistant Active" : "👤 Human Operator Manual Control Mode";
+
+                    const messageArea = document.getElementById('message-area');
+                    
+                    if (data.history.length === 0) {
+                        messageArea.innerHTML = `<div class="empty-state"><p>No messages recorded inside this chat space yet.</p></div>`;
+                        return;
+                    }
+
+                    let messagesHtml = "";
+                    data.history.forEach(msg => {
+                        const typeClass = msg.is_admin ? 'admin' : 'customer';
+                        messagesHtml += `
+                            <div class="msg-container ${typeClass}">
+                                <div class="msg-bubble">${escapeHtml(msg.text)}</div>
+                                <div class="msg-info">
+                                    <span class="msg-sender">${msg.sender}</span>
+                                    <span>${msg.time}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    // Track scroll position - only force snap back to bottom if user wasn't reviewing past text history
+                    const isScrolledToBottom = messageArea.scrollHeight - messageArea.clientHeight <= messageArea.scrollTop + 150;
+                    
+                    messageArea.innerHTML = messagesHtml;
+                    
+                    if (isScrolledToBottom) {
+                        messageArea.scrollTop = messageArea.scrollHeight;
+                    }
+                }
+            })
+            .catch(err => console.error("Error reading full ticket logs:", err));
+        }
+
+        /**
+         * Dispatches manual reply overrides directly into the active channel loop 
+         */
+        function submitAdminOverride() {
+            const inputField = document.getElementById('reply-input');
+            const rawText = inputField.value.trim();
+            if (!rawText || !globalSelectedSessionId) return;
+
+            // Disable UI inputs momentarily during fetch transport execution flight 
+            inputField.disabled = true;
+            document.getElementById('send-btn').disabled = true;
+
+            // Target pattern mapping paths matching: /core/chat-dashboard/reply/session_id/
+            // Update this URL match string to point to your precise patterns layout
+            fetch(`/core/chat-dashboard/reply/${globalSelectedSessionId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ message: rawText })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    inputField.value = ""; // Clean input line
+                    loadDetailedChatTimeline(); // Reload chat log view instantly
+                    fetchDashboardOverview(); // Refresh sidebar lists logs immediately
+                } else {
+                    alert("Error executing manual transmission override: " + data.message);
+                }
+            })
+            .catch(err => console.error("Post exception dispatch failed:", err))
+            .finally(() => {
+                inputField.disabled = false;
+                document.getElementById('send-btn').disabled = false;
+                inputField.focus();
+            });
+        }
+
+        // Security Utility: Sanitizes input payload strings to prevent HTML cross-site code injections
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html> {% endcomment %}

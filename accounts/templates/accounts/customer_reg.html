@@ -1,0 +1,122 @@
+{% extends "layout.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+
+{% block content %}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h5 class="m-0 font-weight-bold text-primary">Register New System User</h5>
+            <p class="text-muted small mb-0">
+                Create a new user, assign a role, and specify their superior (if needed).
+            </p>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row">
+
+                    <!-- LEFT SIDE -->
+                    <div class="col-lg-6">
+                        <h6 class="text-secondary mb-3">Core Details & Credentials</h6>
+
+                        <div class="mb-3">
+                            {{ form.email.label_tag }}
+                            {{ form.email|add_class:"form-control" }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.username.label_tag }}
+                            {{ form.username|add_class:"form-control" }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.first_name.label_tag }}
+                            {{ form.first_name|add_class:"form-control" }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.last_name.label_tag }}
+                            {{ form.last_name|add_class:"form-control" }}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6 mb-3">
+                                {{ form.password.label_tag }}
+                                {{ form.password|add_class:"form-control" }}
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                {{ form.password_confirm.label_tag }}
+                                {{ form.password_confirm|add_class:"form-control" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT SIDE -->
+                    <div class="col-lg-6">
+                        <h6 class="text-secondary mb-3">Role & Assignment</h6>
+
+                        <div class="mb-3">
+                            {{ form.role.label_tag }}
+                            {{ form.role|add_class:"form-control" }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.assigned_to.label_tag }}
+                            {{ form.assigned_to|add_class:"form-control" }}
+                        </div>
+
+                        <h6 class="text-secondary mb-3 mt-3">Custom Attributes</h6>
+
+                        <div class="mb-3">
+                            {{ form.religion.label_tag }}
+                            {{ form.religion|add_class:"form-control" }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.tribe.label_tag }}
+                            {{ form.tribe|add_class:"form-control" }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.racial_info.label_tag }}
+                            {{ form.racial_info|add_class:"form-control" }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.ip_address.label_tag }}
+                            {{ form.ip_address|add_class:"form-control" }}
+                        </div>
+
+                        <div class="form-check mt-2">
+                            {{ form.is_active|add_class:"form-check-input" }}
+                            {{ form.is_active.label_tag }}
+                        </div>
+
+                        <div class="form-check mt-2">
+                            {{ form.is_staff|add_class:"form-check-input" }}
+                            {{ form.is_staff.label_tag }}
+                        </div>
+                    </div>
+
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary btn-block mt-4">
+                    Create User
+                </button>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

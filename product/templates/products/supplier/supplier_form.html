@@ -1,0 +1,152 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-lg-8 col-md-12 mb-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="mb-0 fw-bold text-success">
+                            <i class="bi bi-info-circle me-2"></i> Supplier Information
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                <label class="form-label fw-bold">Company Name</label>
+                                {{ form.name }}
+                                <small class="text-muted d-block">Official registered company name.</small>
+                                <div class="text-danger small">{{ form.name.errors }}</div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Mobile</label>
+                                {{ form.mobile }}
+                                <div class="text-danger small">{{ form.mobile.errors }}</div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Email Address</label>
+                                {{ form.email }}
+                                <div class="text-danger small">{{ form.email.errors }}</div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Office Address</label>
+                                {{ form.address }}
+                                <div class="text-danger small">{{ form.address.errors }}</div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Website</label>
+                                {{ form.website }}
+                                <div class="text-danger small">{{ form.website.errors }}</div>
+                            </div>
+
+                            <div class="col-12 mb-0">
+                                <label class="form-label fw-bold">Description</label>
+                                {{ form.description }}
+                                <div class="text-danger small">{{ form.description.errors }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-12 mb-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="mb-0 fw-bold text-success">
+                            <i class="bi bi-image me-2"></i> Supplier Assets
+                        </h5>
+                    </div>
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="mb-4 text-center position-relative">
+                            <label class="form-label fw-bold d-block text-start">Supplier Image / Logo</label>
+                            
+                            <button type="button" 
+                                    id="remove-media-btn" 
+                                    class="btn btn-danger btn-sm position-absolute {% if not form.instance.image %}d-none{% endif %}" 
+                                    style="top: 35px; right: 10px; z-index: 10;" 
+                                    onclick="clearMediaSelection()" 
+                                    title="Remove Image">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+
+                            <div class="p-2 border rounded bg-light mb-2">
+                                <img id="category-img-preview" 
+                                    src="{% if form.instance.image %}{{ form.instance.image.file.url }}{% else %}{% static 'assets/images/placeholder.png' %}{% endif %}" 
+                                    class="img-fluid rounded" 
+                                    style="max-height: 200px; width: 100%; object-fit: contain;">
+                            </div>
+                            
+                            <div id="asset-title" class="small text-muted text-truncate">
+                                {% if form.instance.image %}{{ form.instance.image.title }}{% else %}No image selected{% endif %}
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="image" id="id_library_asset_id" value="{{ form.instance.image.id|default:'' }}">
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="openMediaPicker()">
+                                <i class="bi bi-images"></i> Browse Library
+                            </button>
+                        </div>
+
+                        <div class="mt-auto pt-3 border-top">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success btn-lg flex-grow-1">
+                                    <i class="bi bi-check-circle"></i> Save
+                                </button>
+                                <a href="{% url 'products:supplier_list' %}" class="btn btn-outline-secondary btn-lg flex-grow-1">Back</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> 
+    </form>
+</div>
+
+<script>
+// This function is called by the Child Window (Media Library)
+function handleVisualSelection(url, id, title) {
+    // 1. Update Preview Image
+    const preview = document.getElementById('category-img-preview');
+    preview.src = url;
+    
+    // 2. Update Hidden Field (The ID that gets saved to the DB)
+    const hiddenInput = document.getElementById('id_library_asset_id');
+    hiddenInput.value = id;
+    
+    // 3. Update Title text
+    document.getElementById('asset-title').innerText = title || "Selected Asset ID: " + id;
+    
+    // 4. Show Remove Button
+    document.getElementById('remove-media-btn').classList.remove('d-none');
+    
+    console.log("Selected Image ID:", id);
+}
+
+function openMediaPicker() {
+    const url = "{% url 'core:media_picker' %}?type=picker";
+    const width = 1100;
+    const height = 700;
+    const left = (window.screen.width / 2) - (width / 2);
+    const top = (window.screen.height / 2) - (height / 2);
+    
+    window.open(url, "MediaPicker", `width=${width},height=${height},top=${top},left=${left},status=no,menubar=no,toolbar=no`);
+}
+
+function clearMediaSelection() {
+    document.getElementById('category-img-preview').src = "{% static 'assets/images/placeholder.png' %}";
+    document.getElementById('id_library_asset_id').value = "";
+    document.getElementById('asset-title').innerText = "No image selected";
+    document.getElementById('remove-media-btn').classList.add('d-none');
+}
+</script>
+
+{% endblock %}

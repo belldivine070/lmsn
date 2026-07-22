@@ -1,0 +1,269 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid pt-3">
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show small shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+            <div>
+                <h5 class="m-0 text-primary fw-semibold" style="font-size: 1.1rem;">
+                    <i class="bi bi-shield-lock me-2"></i> System Identity & Access Roles
+                </h5>
+                <p class="text-muted small mb-0">Configure high-level enterprise roles, system assignment counters, and rule policies.</p>
+            </div>
+            <div>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#permissionModal">
+                    <i class="bi bi-key me-1"></i> Add Raw Permission
+                </button>
+                <a href="{% url 'accounts:add_role' %}" class="btn btn-primary btn-sm ms-1">
+                    <i class="bi bi-plus-lg me-1"></i> Create Position
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small text-secondary">
+                    <thead class="table-light text-dark fw-bold">
+                        <tr>
+                            <th class="ps-4" style="width: 25%;">Position Designation</th>
+                            <th style="width: 45%;">Functional Scope Statement</th>
+                            <th class="text-center" style="width: 15%;">Assigned Active Base Users</th>
+                            <th class="text-end pe-4" style="width: 15%;">Operations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for role in roles %}
+                            <tr>
+                                <td class="ps-4 text-dark fw-semibold">{{ role.name }}</td>
+                                <td><span class="text-muted">{{ role.description|default:"No description documentation provided." }}</span></td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary rounded-pill font-monospace px-2.5 py-1">{{ role.user_count }}</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <a href="{% url 'accounts:edit_role' role.pk %}" class="btn btn-light btn-sm text-primary border" title="Edit Properties">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'accounts:delete_role' role.pk %}" class="d-inline" onsubmit="return confirm('Confirm permanent removal of role: {{ role.name }}?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-light btn-sm text-danger border ms-1" title="Purge Record">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="bi bi-exclamation-triangle d-block fs-3 mb-2 text-warning"></i>
+                                    No organizational positions configured within this server's deployment.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="permissionModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="permissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered small">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold text-primary" id="permissionModalLabel"><i class="bi bi-key-fill me-2"></i>Register System Permission Key</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="">
+                {% csrf_token %}
+                <div class="modal-body bg-light p-4">
+                    <div class="mb-3">
+                        <label class="form-label text-dark fw-semibold">Display Title Name</label>
+                        <input type="text" name="name" class="form-control form-control-sm" placeholder="e.g., Can Edit Invoices" required />
+                    </div>
+                    <div>
+                        <label class="form-label text-dark fw-semibold">System String Identifier (Codename)</label>
+                        <input type="text" name="codename" class="form-control form-control-sm font-monospace" placeholder="e.g., can_edit_invoices" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-3">Commit Signature Token</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% comment %} {% extends "layout.html" %}
+{% load static %}
+
+
+
+{% block content %}
+<div class="container-fluid mt-3 mt-md-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 mb-1 text-dark fw-bold">Role Management</h2>
+            <p class="text-muted small mb-0">Manage system permissions and user roles</p>
+        </div>
+
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-4 shadow-sm fw-bold">
+            <i class="bi bi-plus-lg"></i> <span class="d-none d-sm-inline"><a href="{% url 'accounts:add_role' %}" class="text-white">Add New Role</a></span>
+        </button>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="bg-light d-none d-lg-table-header-group">
+                        <tr class="text-uppercase small fw-bold text-secondary">
+                            <th class="ps-4 py-3" style="width:5%;">#</th>
+                            <th class="py-3" style="width:30%;">Role Name</th>
+                            <th class="text-center py-3" style="width:15%;">Create User</th>
+                            <th class="text-center py-3" style="width:15%;">Assign Staff</th>
+                            <th class="text-center py-3" style="width:15%;">Users Count</th>
+                            <th class="text-end pe-4 py-3" style="width:20%;">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="border-top-0">
+                        {% for role in roles %}
+                        <tr>
+                            <td class="ps-4 text-muted small d-none d-lg-table-cell">
+                                {{ forloop.counter }}
+                            </td>
+
+                            <td>
+                                <div class="fw-bold text-dark fs-6">{{ role.name }}</div>
+
+                                <div class="d-lg-none mt-2 d-flex flex-wrap gap-2">
+                                    <span class="badge bg-light text-dark border fw-normal">
+                                        <i class="bi bi-people me-1"></i>{{ role.user_count }} Users
+                                    </span>
+
+                                    <span class="badge {% if role.can_create_user %}bg-success{% else %}bg-secondary{% endif %}">
+                                        Create: {{ role.can_create_user|yesno:"Yes,No" }}
+                                    </span>
+
+                                    <span class="badge {% if role.can_assign_staff %}bg-success{% else %}bg-secondary{% endif %}">
+                                        Assign: {{ role.can_assign_staff|yesno:"Yes,No" }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td class="text-center d-none d-lg-table-cell">
+                                <span class="badge {% if role.can_create_user %}bg-success{% else %}bg-secondary{% endif %} px-3 py-2">
+                                    {{ role.can_create_user|yesno:"Yes,No" }}
+                                </span>
+                            </td>
+
+                            <td class="text-center d-none d-lg-table-cell">
+                                <span class="badge {% if role.can_assign_staff %}bg-success{% else %}bg-secondary{% endif %} px-3 py-2">
+                                    {{ role.can_assign_staff|yesno:"Yes,No" }}
+                                </span>
+                            </td>
+
+                            <td class="text-center d-none d-lg-table-cell">
+                                <span class="fw-bold text-primary">
+                                    {{ role.user_count }}
+                                </span>
+                            </td>
+
+                            <td class="text-end pe-4">
+                                <div class="btn-group shadow-sm">
+                                    <a href="{% url 'accounts:edit_role' pk=role.pk %}"
+                                       class="btn btn-white btn-sm border text-info px-2"
+                                       title="Edit Role">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                    <a href="{% url 'accounts:delete_role' pk=role.pk %}"
+                                       class="btn btn-white btn-sm border text-danger px-2"
+                                       title="Delete Role">
+                                        <i class="bi bi-trash3"></i>
+                                    </a>
+                                </div>
+                            </td>
+
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">
+                                <i class="bi bi-shield-lock d-block fs-2 mb-2"></i>
+                                No roles have been defined yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Clean Header Styling */
+.table thead th {
+    background-color: #f8f9fa !important;
+    border-bottom: 2px solid #edf2f9 !important;
+    color: #6e84a3;
+    font-size: 0.75rem;
+    letter-spacing: .02em;
+}
+
+/* Hover effect on rows */
+.table tbody tr {
+    transition: all 0.2s ease-in-out;
+}
+
+.table tbody tr:hover {
+    background-color: #f9fbff !important;
+}
+
+/* Rounded Action Buttons */
+.btn-group .btn {
+    border-color: #edf2f9 !important;
+}
+.btn-group .btn:hover {
+    background-color: #f8f9fa;
+}
+
+@media (max-width: 991px) {
+    .table td {
+        padding: 1.25rem 1rem !important;
+    }
+}
+</style>
+{% endblock %} {% endcomment %}

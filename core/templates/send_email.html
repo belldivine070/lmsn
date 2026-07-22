@@ -1,0 +1,323 @@
+{% extends "layout.html" %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block content %}
+<style>
+    #recipient-preview-box { 
+        max-height: 400px; 
+        overflow-y: auto; 
+        border: 1px solid #dee2e6; 
+        border-radius: 8px; 
+        background-color: #f8f9fa;
+    }
+    .recipient-row { 
+        padding: 6px 12px;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s ease;
+    }
+    .recipient-row:hover { background-color: #e9ecef; }
+    .django-summernote-widget { width: 100% !important; height: 400px !important; }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css">
+
+<div class="container-fluid py-4">
+    {% if form.errors %}
+        <div class="alert alert-danger rounded-3 shadow-sm border-0 mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Validation Alert:</strong> Please correct the highlighted errors below.
+        </div>
+    {% endif %}
+
+    <form method="post" id="broadcast-form">
+        {% csrf_token %}
+        {{ form.media }}
+
+        <input type="hidden" name="user_timezone" id="user_timezone">
+        
+        <div id="hidden-recipients-box"></div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-8">
+                <div class="card shadow-sm border-0 p-4 rounded-4 bg-white">
+                    <h3 class="fw-bold mb-4 text-primary">
+                        <i class="bi bi-megaphone-fill me-2"></i>
+                        {% if object %}Modify Campaign Workspace{% else %}Broadcast Composer{% endif %}
+                    </h3>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">TITLE</label>
+                        {% render_field form.title class="form-control border-2 shadow-none" %}
+                        {% if form.title.errors %}
+                            <div class="text-danger small mt-1 fw-bold">
+                                {{ form.title.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">SUBJECT</label>
+                            {% render_field form.subject class="form-control border-2 shadow-none" %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">SENDER EMAIL</label>
+                            {% render_field form.sender_email class="form-control border-2 shadow-none" %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">MESSAGE CONTENT</label>
+                        {{ form.content }}
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <button type="submit" name="action_draft" class="btn btn-outline-secondary w-100 py-3 fw-bold rounded-3">
+                                <i class="bi bi-file-earmark-lock-fill me-1"></i> Save Changes as Draft
+                            </button>
+                        </div>
+                        <div class="col-md-7">
+                            <button type="submit" name="action_broadcast" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow">
+                                <i class="bi bi-send-fill me-1"></i> Execute Outbound Broadcast Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="card shadow-sm border-0 p-3 rounded-4 mb-3 bg-white">
+                    <label class="form-label small fw-bold text-muted">SCHEDULE (OPTIONAL)</label>
+                    {% render_field form.scheduled_time class="form-control border-2 shadow-none" id="datetimepicker" autocomplete="off" placeholder="Click to select date & time" %}
+
+                    <h6 class="fw-bold mt-4 mb-3 small text-muted">AUDIENCE SELECTION</h6>
+                    {% render_field form.target_audience class="form-select mb-3 border-2 shadow-none" id="id_target_audience" %}
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small fw-bold">
+                            Selected (<span id="recipient-count" class="text-primary">0</span>)
+                        </span>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="check-all-toggle" checked>
+                            <label class="form-check-label small fw-bold">Select All</label>
+                        </div>
+                    </div>
+
+                    <input type="text" id="email-search" class="form-control form-control-sm mb-2" placeholder="Search emails...">
+
+                    <div id="recipient-preview-box">
+                        <div id="recipient-list">
+                            <p class="text-center text-muted small py-5">Load an audience to see recipients...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 p-3 rounded-4 bg-dark text-white">
+                    <h6 class="fw-bold mb-3 small text-white-50">RECENT HISTORY</h6>
+
+                    <div class="overflow-auto" style="max-height: 250px;">
+                        {% for post in recent_posts %}
+                        <div class="bg-white bg-opacity-10 rounded-3 p-2 mb-2 border border-white border-opacity-10">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="d-flex flex-column justify-content-center">
+                                    <div class="mb-1">
+                                        <div class="fw-bold text-white lh-sm mb-1" style="font-size: 0.95rem;">
+                                            {{ post.title }}
+                                        </div>
+                                        <div class="text-white-50 small lh-sm">
+                                            {{ post.subject }}
+                                        </div>
+                                    </div>
+                                    <div class="small mt-1 d-flex flex-wrap align-items-center" style="font-size: 0.75rem; opacity: 0.8;">
+                                        <span class="text-white-50">
+                                            <i class="bi bi-calendar-event me-1"></i>{{ post.created_at|date:"M d, Y" }}
+                                        </span>
+                                        {% if post.scheduled_time %}
+                                            <span class="mx-2 text-white-50">•</span>
+                                            <span class="text-info">
+                                                <i class="bi bi-clock-history me-1"></i>Sched: {{ post.scheduled_time|date:"M d, H:i" }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-sm btn-info py-0 px-2 fw-bold reuse-btn" data-id="{{ post.id }}" style="font-size: 0.7rem;">
+                                        REUSE
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-center small text-white-50">No history yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const tzField = document.getElementById('user_timezone');
+    if (tzField) {
+        tzField.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+
+    jQuery('#datetimepicker').datetimepicker({
+        format: 'Y-m-d H:i',
+        minDate: 0,
+        step: 15
+    });
+
+    let masterEmailList = [];
+    const audienceSelect = document.getElementById('id_target_audience');
+    const recipientListContainer = document.getElementById('recipient-list');
+
+    function updateRecipientDOM() {
+        const searchVal = document.getElementById('email-search').value.toLowerCase();
+        recipientListContainer.innerHTML = '';
+        
+        let checkedCount = 0;
+        let renderedCount = 0;
+
+        masterEmailList.forEach((item, index) => {
+            if (item.email.toLowerCase().includes(searchVal)) {
+                renderedCount++;
+                if (item.checked) checkedCount++;
+
+                const row = document.createElement('div');
+                row.className = 'form-check recipient-row d-flex align-items-center mb-0';
+                row.innerHTML = `
+                    <input class="form-check-input me-2 email-checkbox-item" type="checkbox" data-index="${index}" id="chk-${index}" ${item.checked ? 'checked' : ''}>
+                    <label class="form-check-label font-monospace text-dark small w-100" for="chk-${index}">
+                        ${item.email}
+                    </label>
+                `;
+                recipientListContainer.appendChild(row);
+            }
+        });
+
+        if (renderedCount === 0) {
+            recipientListContainer.innerHTML = '<p class="text-center text-muted small py-4">No matching records found.</p>';
+        }
+
+        document.getElementById('recipient-count').innerText = checkedCount;
+        syncHiddenInputs();
+    }
+
+    function syncHiddenInputs() {
+        const hiddenBox = document.getElementById('hidden-recipients-box');
+        hiddenBox.innerHTML = '';
+        masterEmailList.forEach(item => {
+            if (item.checked) {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'final_recipients';
+                hiddenInput.value = item.email;
+                hiddenBox.appendChild(hiddenInput);
+            }
+        });
+    }
+
+    if (audienceSelect) {
+        audienceSelect.addEventListener('change', function () {
+            const audience = this.value;
+            recipientListContainer.innerHTML = '<p class="text-center text-muted small py-5"><span class="spinner-border spinner-border-sm me-2 text-primary"></span>Fetching list context...</p>';
+
+            fetch(`?audience=${audience}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.emails) {
+                    masterEmailList = data.emails.map(email => ({ email: email, checked: true }));
+                    document.getElementById('check-all-toggle').checked = true;
+                    updateRecipientDOM();
+                } else {
+                    recipientListContainer.innerHTML = '<p class="text-center text-danger small py-5">Error parsing targets.</p>';
+                }
+            })
+            .catch(err => {
+                console.error("AJAX Fetch crashed:", err);
+                recipientListContainer.innerHTML = '<p class="text-center text-danger small py-5">Connection failed.</p>';
+            });
+        });
+    }
+
+    recipientListContainer.addEventListener('change', function (e) {
+        if (e.target.classList.contains('email-checkbox-item')) {
+            const index = e.target.getAttribute('data-index');
+            masterEmailList[index].checked = e.target.checked;
+            
+            const anyUnchecked = masterEmailList.some(item => !item.checked);
+            document.getElementById('check-all-toggle').checked = !anyUnchecked;
+            
+            updateRecipientDOM();
+        }
+    });
+
+    document.getElementById('check-all-toggle').addEventListener('change', function () {
+        const checkedState = this.checked;
+        masterEmailList.forEach(item => item.checked = checkedState);
+        updateRecipientDOM();
+    });
+
+    document.getElementById('email-search').addEventListener('input', updateRecipientDOM);
+
+    // --- INITIALIZE EDIT TARGET DATA MATRIX ---
+    {% if object and object.target_emails %}
+        masterEmailList = [
+            {% for email in object.target_emails %}
+                { email: "{{ email|escapejs }}", checked: true },
+            {% endfor %}
+        ];
+        updateRecipientDOM();
+    {% endif %}
+
+    // --- AJAX CAMPAIGN REUSE ENGINE ---
+    document.querySelectorAll('.reuse-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const postId = this.getAttribute('data-id');
+
+            fetch(`?clone_id=${postId}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const titleField = document.querySelector('input[name="title"]');
+                    if (titleField) titleField.value = data.title + " (Copy)";
+                    
+                    const subjField = document.querySelector('input[name="subject"]');
+                    if (subjField) subjField.value = data.subject ? data.subject + " (Copy)" : "";
+
+                    if (audienceSelect) {
+                        audienceSelect.value = data.target_audience;
+                        audienceSelect.dispatchEvent(new Event('change'));
+                    }
+
+                    const txtArea = document.querySelector('textarea[name="content"]');
+                    if (txtArea) {
+                        if (window.$ && $(txtArea).data('summernote')) {
+                            $(txtArea).summernote('code', data.content);
+                        } else {
+                            txtArea.value = data.content;
+                        }
+                    }
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    alert("Could not load tracking template structure: " + data.error);
+                }
+            })
+            .catch(err => console.error("Historical cloning failed:", err));
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid pt-3">
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show small shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+            <div>
+                <h5 class="m-0 text-primary fw-semibold" style="font-size: 1.1rem;">
+                    <i class="bi bi-key-fill me-2"></i> System Security Permission Keys
+                </h5>
+                <p class="text-muted small mb-0">System-wide codenames parsed across your custom authorization view mixins.</p>
+            </div>
+            <div>
+                <a href="{% url 'accounts:add_permission' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i> Add Core Token
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small text-secondary">
+                    <thead class="table-light text-dark fw-bold">
+                        <tr>
+                            <th class="ps-4" style="width: 40%;">UI Display Title</th>
+                            <th style="width: 40%;">Mixin Codename String Value</th>
+                            <th class="text-end pe-4" style="width: 20%;">Operations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for perm in permissions %}
+                            <tr>
+                                <td class="ps-4 text-dark fw-semibold">{{ perm.name }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border font-monospace px-2.5 py-1">
+                                        {{ perm.codename }}
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <a href="{% url 'accounts:edit_permission' perm.pk %}" class="btn btn-light btn-sm text-primary border" title="Edit Token metadata">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'accounts:delete_permission' perm.pk %}" class="d-inline" onsubmit="return confirm('Purge code token relationship value: {{ perm.codename }}?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-light btn-sm text-danger border ms-1" title="Purge Token">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-5 text-muted">
+                                    <i class="bi bi-lock-slice d-block fs-3 mb-2 text-muted"></i>
+                                    No access clearance tokens exist within this environment instance.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

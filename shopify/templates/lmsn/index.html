@@ -1,0 +1,197 @@
+{% extends "lmsn/layout.html" %}
+{% load static %}
+
+
+{% block content %}
+
+<!-- START SECTION BANNER -->
+<div class="banner_section slide_medium shop_banner_slider staggered-animation-wrap">
+    <div id="carouselExampleControls" class="carousel slide carousel-fade light_arrow" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item background_bg active" data-img-src="{% static 'assets/images/banner16.jpg' %}">
+                <div class="banner_slide_content banner_content_inner">
+                	<div class="container">
+                    	<div class="row">
+                            <div class="col-lg-7 col-10">
+                                <div class="banner_content overflow-hidden">
+                                    <h2 class="staggered-animation" data-animation="slideInLeft" data-animation-delay="0.5s">LED 75 INCH F58</h2>
+                                    <h5 class="mb-3 mb-sm-4 staggered-animation font-weight-light" data-animation="slideInLeft" data-animation-delay="1s">Get up to <span class="text_default">50%</span> off Today Only!</h5>
+                                    <a class="btn btn-fill-out staggered-animation text-uppercase" href="shop-left-sidebar.html" data-animation="slideInLeft" data-animation-delay="1.5s">Shop Now</a>
+                                </div>
+                            </div>
+                    	</div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item background_bg" data-img-src="{% static 'assets/images/banner17.jpg' %}">
+                <div class="banner_slide_content banner_content_inner">
+                	<div class="container">
+                    	<div class="row">
+                    		<div class="col-lg-8 col-10">
+                                <div class="banner_content overflow-hidden">
+                                    <h2 class="staggered-animation" data-animation="slideInLeft" data-animation-delay="0.5s">Smart Phones</h2>
+                                    <h5 class="mb-3 mb-sm-4 staggered-animation font-weight-light" data-animation="slideInLeft" data-animation-delay="1s"><span class="text_default">50%</span> off in all products</h5>
+                                    <a class="btn btn-fill-out staggered-animation text-uppercase" href="shop-left-sidebar.html" data-animation="slideInLeft" data-animation-delay="1.5s">Shop Now</a>
+                                </div>
+                            </div>
+                    	</div>	
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item background_bg" data-img-src="{% static 'assets/images/banner18.jpg' %}">
+                <div class="banner_slide_content banner_content_inner">
+                	<div class="container">
+                    	<div class="row">
+                    		<div class="col-lg-8 col-10">
+                                <div class="banner_content overflow-hidden">
+                                    <h2 class="staggered-animation" data-animation="slideInLeft" data-animation-delay="0.5s">Beat Headphone</h2>
+                                    <h5 class="mb-3 mb-sm-4 staggered-animation font-weight-light" data-animation="slideInLeft" data-animation-delay="1s">Taking your Viewing Experience to Next Level</h5>
+                                    <a class="btn btn-fill-out staggered-animation text-uppercase" href="shop-left-sidebar.html" data-animation="slideInLeft" data-animation-delay="1.5s">Shop Now</a>
+                                </div>
+                            </div>
+                    	</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev"><i class="ion-chevron-left"></i></a>
+        <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next"><i class="ion-chevron-right"></i></a>
+    </div>
+</div>
+<!-- END SECTION BANNER -->
+
+<!-- END MAIN CONTENT -->
+<div class="main_content">
+
+
+<!-- START SECTION SHOP -->
+
+{% for category in featured_categories %}
+<div class="section small_pt small_pb">
+    <div class="custom-container">
+        <div class="row">
+            <div class="col-xl-3 d-none d-xl-block">
+                <div class="sale-banner">
+                    <a class="hover_effect1" href="{{ category.get_absolute_url }}">
+                        {% if category.image %}
+                            <img src="{{ category.image.file.url }}" alt="{{ category.name }}">
+                        {% else %}
+                            <img src="{% static 'assets/images/shop_banner_img10.jpg' %}" alt="Default Banner">
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-xl-9">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="heading_tab_header">
+                            <div class="heading_s2">
+                                <h4>{{ category.name }}</h4>
+                            </div>
+                            <div class="view_all">
+                                <a href="{{ category.get_absolute_url }}" class="text_default">
+                                    <i class="linearicons-power"></i> <span>View All</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <div class="product_slider carousel_slider owl-carousel owl-theme dot_style1" 
+                             data-loop="true" 
+                             data-margin="20" 
+                             data-responsive='{"0":{"items": "1"}, "481":{"items": "2"}, "768":{"items": "3"}, "991":{"items": "4"}}'>
+                            
+                            {% for product in category.active_products %}
+                            <div class="item">
+                                <div class="product_wrap">
+                                    <div class="product_img">
+                                        <a href="{% url 'lmsn:product_detail' product.id %}">
+                                            {% if product.is_primary %}
+                                                <img src="{{ product.is_primary.file.url }}" alt="{{ product.name }}">
+                                            {% endif %}
+                                            
+                                            {% if product.is_secondary %}
+                                                <img class="product_hover_img" src="{{ product.is_secondary.file.url }}" alt="{{ product.name }} Hover">
+                                            {% endif %}
+                                        </a>
+                                        <div class="product_action_box">
+                                            <ul class="list_none pr_action_btn">
+                                                <li class="add-to-cart">
+                                                    {% with stock=product.available_inventory %}
+                                                        {% if stock|length == 1 %}
+                                                            <a href="javascript:void(0);" 
+                                                            class="ajax-add-to-cart" 
+                                                            data-sku="{{ stock.0.sku }}">
+                                                                <i class="icon-basket-loaded"></i> Add To Cart
+                                                            </a>
+                                                        {% elif stock|length > 1 %}
+                                                            <a href="{% url 'lmsn:product_detail' product.id %}">
+                                                                <i class="icon-basket-loaded"></i> Select Options
+                                                            </a>
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                </li>
+                                                <li><a href="shop-compare.html" class="popup-ajax"><i class="icon-shuffle"></i></a></li>
+                                                <li><a href="shop-quick-view.html" class="popup-ajax"><i class="icon-magnifier-add"></i></a></li>
+                                                {% if user.is_authenticated %}
+                                                <li><a href="javascript:void(0);" class="add_wishlist" data-product-id="{{ product.id }}"><i class="icon-heart"></i></a></li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="product_info">
+                                        <h6 class="product_title">
+                                            <a href="{% url 'lmsn:product_detail' product.id %}">{{ product.name }}</a>
+                                        </h6>
+                                        
+                                        <div class="product_price">
+                                            <span class="price">${{ product.selling_price }}</span>
+                                            {% if product.is_sales %}  
+                                                <del>${{ product.old_price }}</del>
+                                                <div class="on_sale">
+                                                    <span>{{ product.discount }}% Off</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="rating_wrap">
+                                            <div class="rating">
+                                                <div class="product_rate" style="width:{{ product.rating_percentage }}%"></div>
+                                            </div>
+                                            <span class="rating_num">({{ product.reviews.count }})</span>
+                                        </div>
+                                        
+                                        <div class="pr_desc">
+                                            <p>{{ product.short_description|truncatewords:15 }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="item">
+                                <p class="text-muted">No products found in this category.</p>
+                            </div>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endfor %}
+
+
+</div>
+<!-- END MAIN CONTENT -->
+
+
+{% endblock  %} 

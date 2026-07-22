@@ -1,0 +1,269 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit Section Component{% else %}Isolated Component Builder Workspace{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    {% if form.media %}
+        {{ form.media }}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate id="sectionForm">
+        {% csrf_token %}
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h3 mb-0 text-dark">
+                    {% if form.instance.pk %}🛠️ Refine Section Workspace{% else %}✨ New Section Component Builder{% endif %}
+                </h2>
+                {% if page %}
+                    <span class="text-muted small">Parent Container Page Context: <strong>{{ page.title }}</strong></span>
+                {% endif %}
+            </div>
+            <div>
+                <a href="{% url 'core:section_list' page.pk %}" class="btn btn-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+                <button type="submit" class="btn btn-success px-4 shadow-sm fw-medium">
+                    <i class="bi bi-save me-1"></i> Commit Form State
+                </button>
+            </div>
+        </div>
+
+        {% if form.errors or form.non_field_errors %}
+            <div class="alert alert-danger shadow-sm border-0 mb-4">
+                <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please adjust the conflicting fields below:</h6>
+                <ul class="mb-0 small">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                    {% for field, errors in form.errors.items %}
+                        <li><strong>{{ field|title }}:</strong> {{ errors.0|striptags }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="row">
+            {# --- LEFT COLUMN: CORE LAYOUT BLOCK CONFIGURATIONS --- #}
+            <div class="col-lg-8 order-lg-1 order-2">
+                <div class="card shadow border-0 mb-4">
+                    <div class="card-header py-3 bg-white border-bottom">
+                        <h5 class="m-0 font-weight-bold text-primary"><i class="bi bi-columns me-2"></i>Structural Layout Definition</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.layout_type.id_for_label }}" class="form-label fw-bold text-dark">Layout Block Type</label>
+                                <select name="{{ form.layout_type.name }}" id="{{ form.layout_type.id_for_label }}" class="form-select form-select-lg">
+                                    {% for value, text in form.layout_type.field.choices %}
+                                        <option value="{{ value }}" {% if form.layout_type.value == value %}selected{% endif %}>{{ text }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="content-source-selector" class="form-label fw-bold text-primary">Content Source Rule Selector</label>
+                                <select id="content-source-selector" class="form-select form-select-lg border-primary bg-light-subtle fw-medium">
+                                    <option value="static" {% if not form.category.value and not form.widget.value %}selected{% endif %}>Static Markup / Media Block Only</option>
+                                    <option value="category" {% if form.category.value %}selected{% endif %}>Core Category Stream Link</option>
+                                    <option value="widget" {% if form.widget.value %}selected{% endif %}>Dynamic Custom Widget Plugin</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="dynamic-source-container" class="mb-4 p-3 bg-light rounded border border-light-subtle" style="display: none;">
+                            <div class="category-wrapper mb-3" style="display: none;">
+                                <label for="{{ form.category.id_for_label }}" class="form-label fw-bold text-info"><i class="bi bi-tags-fill me-1"></i>Linked Stream Category</label>
+                                <select name="{{ form.category.name }}" id="{{ form.category.id_for_label }}" class="form-select">
+                                    {% for value, text in form.category.field.choices %}
+                                        <option value="{{ value }}" {% if form.category.value == value %}selected{% endif %}>{{ text }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="widget-wrapper mb-3" style="display: none;">
+                                <label for="{{ form.widget.id_for_label }}" class="form-label fw-bold text-purple" style="color: #6f42c1;"><i class="bi bi-cpu-fill me-1"></i>Active Widget Engine Module</label>
+                                <select name="{{ form.widget.name }}" id="{{ form.widget.id_for_label }}" class="form-select">
+                                    {% for value, text in form.widget.field.choices %}
+                                        <option value="{{ value }}" {% if form.widget.value == value %}selected{% endif %}>{{ text }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            {# Dynamic Checkbox Post Filter List Container Wrapper Block #}
+                            <div class="posts-selection-wrapper border-top pt-3 mt-2">
+                                <label class="form-label fw-bold text-dark mb-2">
+                                    <i class="bi bi-check2-square me-1"></i> {{ form.visible_posts.label }}
+                                </label>
+                                <div class="form-text text-muted mb-3">{{ form.visible_posts.help_text }}</div>
+                                <div id="id_visible_posts" class="p-2 bg-white rounded border" style="max-height: 220px; overflow-y: auto;">
+                                    {% for checkbox in form.visible_posts %}
+                                        <div class="form-check my-2">
+                                            {{ checkbox.tag }}
+                                            <label class="form-check-label text-dark ms-2" for="{{ checkbox.id_for_label }}">
+                                                {{ checkbox.choice_label }}
+                                            </label>
+                                        </div>
+                                    {% empty %}
+                                        <p class="text-muted small my-1 p-1">No dynamic child entries are loaded for selection.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.body_content.id_for_label }}" class="form-label fw-bold text-dark">Body Rich-Text Content (Summernote)</label>
+                            <div class="summernote-textarea-wrapper">
+                                {{ form.body_content }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.cta_text.id_for_label }}" class="form-label fw-bold text-dark">Action Button Label (CTA)</label>
+                                <input type="text" name="{{ form.cta_text.name }}" id="{{ form.cta_text.id_for_label }}" class="form-control" placeholder="e.g. Discover More" value="{{ form.cta_text.value|default:'' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.cta_url.id_for_label }}" class="form-label fw-bold text-dark">Action Button Target Link</label>
+                                <input type="text" name="{{ form.cta_url.name }}" id="{{ form.cta_url.id_for_label }}" class="form-control" placeholder="/shop/ or absolute URI" value="{{ form.cta_url.value|default:'' }}">
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label for="{{ form.custom_classes.id_for_label }}" class="form-label fw-bold text-dark">Custom HTML Layout CSS Classes</label>
+                            <input type="text" name="{{ form.custom_classes.name }}" id="{{ form.custom_classes.id_for_label }}" class="form-control" placeholder="e.g. hero-bg text-center py-5 shadow" value="{{ form.custom_classes.value|default:'' }}">
+                            <div class="form-text text-muted">Separate multiple classes with spaces.</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            {# --- RIGHT COLUMN: MEDIA ASSETS & COMPONENT CONTROL PARAMETERS --- #}
+            <div class="col-lg-4 order-lg-2 order-1">
+                <div class="card shadow border-0 mb-4">
+                    <div class="card-header py-3 bg-light border-bottom">
+                        <h6 class="m-0 font-weight-bold text-success"><i class="bi bi-sliders me-2"></i>Parameters & Assets</h6>
+                    </div>
+                    <div class="card-body">
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.image.id_for_label }}" class="form-label fw-bold text-dark">Featured Graphic Image</label>
+                            {% if form.instance.image %}
+                                <div class="mb-3 p-2 border rounded bg-light text-center">
+                                    <img src="{{ form.instance.image.url }}" class="img-fluid rounded" style="max-height: 150px; object-fit: contain;" alt="Asset Preview">
+                                </div>
+                            {% endif %}
+                            <input type="file" name="{{ form.image.name }}" id="{{ form.image.id_for_label }}" class="form-control">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.video_url.id_for_label }}" class="form-label fw-bold text-dark">Streaming Embed Video URL</label>
+                            <input type="url" name="{{ form.video_url.name }}" id="{{ form.video_url.id_for_label }}" class="form-control" placeholder="https://example.com/embed-video" value="{{ form.video_url.value|default:'' }}">
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="mb-4">
+                            <label for="{{ form.order.id_for_label }}" class="form-label fw-bold text-dark">Display Framework Weight Order</label>
+                            <input type="number" name="{{ form.order.name }}" id="{{ form.order.id_for_label }}" class="form-control form-control-lg fw-bold text-center" value="{{ form.order.value|default:0 }}">
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check form-switch p-3 bg-light rounded border border-light-subtle d-flex align-items-center justify-content-between">
+                                <label class="form-check-label fw-bold mb-0 ms-1 text-dark" for="{{ form.is_active.id_for_label }}">Active Framework Status</label>
+                                <input class="form-check-input me-1 fs-5" type="checkbox" role="switch" name="{{ form.is_active.name }}" id="{{ form.is_active.id_for_label }}" {% if form.is_active.value %}checked{% endif %}>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label for="{{ form.internal_notes.id_for_label }}" class="form-label fw-bold text-dark">Internal Staff Documentation Log</label>
+                            <textarea name="{{ form.internal_notes.name }}" id="{{ form.internal_notes.id_for_label }}" class="form-control text-muted" rows="3" placeholder="Write internal notes here...">{{ form.internal_notes.value|default:'' }}</textarea>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const sourceSelector = document.getElementById("content-source-selector");
+        const containerBox = document.getElementById("dynamic-source-container");
+        const catWrapper = document.querySelector(".category-wrapper");
+        const widgetWrapper = document.querySelector(".widget-wrapper");
+        
+        const categorySelect = document.querySelector("#id_category");
+        const widgetSelect = document.querySelector("#id_widget");
+        const checkboxWrapper = document.querySelector("#id_visible_posts");
+
+        function fetchUpdatedCheckboxes() {
+            let catId = categorySelect ? categorySelect.value : "";
+            let widId = widgetSelect ? widgetSelect.value : "";
+            
+            // Do not make an API request if the overall setting is configured to Static Content
+            if (sourceSelector.value === "static") {
+                if (checkboxWrapper) checkboxWrapper.innerHTML = '<p class="text-muted small my-1 p-1">No dynamic child entries are loaded for selection.</p>';
+                return;
+            }
+
+            // fetch(`/ajax/load-posts-checkboxes/?category=${catId}&widget=${widId}`)
+            fetch(`{% url 'core:ajax_load_posts_checkboxes' %}?category=${catId}&widget=${widId}`)
+                .then(res => res.text())
+                .then(htmlMarkup => {
+                    if (checkboxWrapper) {
+                        checkboxWrapper.innerHTML = htmlMarkup;
+                    }
+                })
+                .catch(err => console.error("Error executing checkbox refresh sequence:", err));
+        }
+
+        function syncFormFields() {
+            if (!sourceSelector) return;
+            const ruleValue = sourceSelector.value;
+            
+            if (ruleValue === "category") {
+                if (containerBox) containerBox.style.display = "block";
+                if (catWrapper) catWrapper.style.display = "block";
+                if (widgetWrapper) widgetWrapper.style.display = "none";
+                if (widgetSelect) widgetSelect.value = ""; 
+                fetchUpdatedCheckboxes();
+            } else if (ruleValue === "widget") {
+                if (containerBox) containerBox.style.display = "block";
+                if (catWrapper) catWrapper.style.display = "none";
+                if (widgetWrapper) widgetWrapper.style.display = "block";
+                if (categorySelect) categorySelect.value = "";    
+                fetchUpdatedCheckboxes();
+            } else {
+                if (containerBox) containerBox.style.display = "none";
+                if (catWrapper) catWrapper.style.display = "none";
+                if (widgetWrapper) widgetWrapper.style.display = "none";
+                if (categorySelect) categorySelect.value = "";
+                if (widgetSelect) widgetSelect.value = "";
+                fetchUpdatedCheckboxes();
+            }
+        }
+
+        if (sourceSelector) {
+            syncFormFields();
+            sourceSelector.addEventListener("change", syncFormFields);
+        }
+
+        if (categorySelect && widgetSelect) {
+            categorySelect.addEventListener("change", function() {
+                if (this.value && widgetSelect) widgetSelect.value = ""; 
+                fetchUpdatedCheckboxes();
+            });
+            widgetSelect.addEventListener("change", function() {
+                if (this.value && categorySelect) categorySelect.value = ""; 
+                fetchUpdatedCheckboxes();
+            });
+        }
+    });
+</script>
+{% endblock %}

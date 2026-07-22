@@ -1,0 +1,130 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <form method="post">
+        {% csrf_token %}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>{% if form.instance.pk %}Edit Category: {{ form.instance.name }}{% else %}New Category{% endif %}</h3>
+            <a href="{% url 'products:category_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back 
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card p-4 shadow-sm mb-4 border-0">
+                    <h6 class="text-uppercase text-muted small fw-bold">General Information</h6>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Category Name</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold small text-secondary">Description</label>
+                        {{ form.description }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card p-4 shadow-sm border-0">
+                    <h6 class="text-uppercase text-muted small fw-bold">Category Media</h6>
+                    <hr>
+                    
+                    <div id="media-preview-box" class="mb-3 text-center border rounded p-2 bg-light position-relative" style="min-height: 150px;">
+                        <button type="button" 
+                                id="remove-media-btn" 
+                                class="btn btn-danger btn-sm position-absolute {% if not form.instance.image %}d-none{% endif %}" 
+                                style="top: 10px; right: 10px; z-index: 10;" 
+                                onclick="clearMediaSelection()">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+
+                        <div id="preview-content">
+                            {% if form.instance.image %}
+                                {% if "video" in form.instance.image.file.url or ".mp4" in form.instance.image.file.url %}
+                                    <video src="{{ form.instance.image.file.url }}" class="img-fluid rounded" controls style="max-height: 200px;"></video>
+                                {% else %}
+                                    <img src="{{ form.instance.image.file.url }}" class="img-fluid rounded" style="max-height: 200px; width: 100%; object-fit: cover;">
+                                {% endif %}
+                            {% else %}
+                                <img src="{% static 'assets/images/placeholder.png' %}" class="img-fluid rounded opacity-50" style="max-height: 150px;">
+                            {% endif %}
+                        </div>
+
+                        <div id="asset-title" class="small text-muted text-truncate mt-2">
+                            {% if form.instance.image %}{{ form.instance.image.title }}{% else %}No media selected{% endif %}
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="library_asset_id" id="id_library_asset_id" value="{{ form.instance.image.id|default:'' }}">
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openMediaPicker()">
+                            <i class="bi bi-images"></i> Browse Library
+                        </button>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                        {{ form.is_featured }} <label class="small fw-bold ms-1">Featured Product</label>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success shadow-sm mt-2">
+                            <i class="bi bi-check-circle me-1"></i> Save Category
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="mediaLibraryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content" id="modal-content-placeholder">
+            </div>
+    </div>
+</div>
+
+<script>
+function openMediaPicker() {
+    const url = "{% url 'core:media_picker' %}?type=picker";
+    window.open(url, "MediaPicker", "width=1100,height=700,status=no,menubar=no,toolbar=no");
+}
+
+/**
+ * Handle selection from popup
+ */
+function handleVisualSelection(url, id, title) {
+    const isVideo = url.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/) !== null;
+    const previewContainer = document.getElementById('preview-content');
+    
+    // 1. Update Preview Content (Handles Image vs Video)
+    if (isVideo) {
+        previewContainer.innerHTML = `<video src="${url}" class="img-fluid rounded" controls style="max-height: 200px;"></video>`;
+    } else {
+        previewContainer.innerHTML = `<img src="${url}" class="img-fluid rounded" style="max-height: 200px; width: 100%; object-fit: cover;">`;
+    }
+
+    // 2. Update Title and Hidden Input
+    document.getElementById('asset-title').innerText = title || "Selected Asset ID: " + id;
+    document.getElementById('id_library_asset_id').value = id;
+    
+    // 3. UI Polish
+    document.getElementById('remove-media-btn').classList.remove('d-none');
+}
+
+/**
+ * Reset selection
+ */
+function clearMediaSelection() {
+    document.getElementById('preview-content').innerHTML = `<img src="{% static 'assets/images/placeholder.png' %}" class="img-fluid rounded opacity-50" style="max-height: 150px;">`;
+    document.getElementById('id_library_asset_id').value = "";
+    document.getElementById('asset-title').innerText = "No media selected";
+    document.getElementById('remove-media-btn').classList.add('d-none');
+}
+</script>
+{% endblock %}

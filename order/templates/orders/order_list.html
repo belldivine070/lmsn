@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="section py-5 bg-light">
+    <div class="container">
+        <h3 class="mb-4">CMS Order Management Dashboard</h3>
+        <div class="card shadow-sm border-0 bg-white">
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order Number</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td class="fw-bold text-dark">{{ order.order_number }}</td>
+                                <td>{{ order.recipient_name }}<br><small class="text-muted">{{ order.recipient_email }}</small></td>
+                                <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                <td>${{ order.total_amount }}</td>
+                                <td>
+                                    <span class="badge {% if order.status == 'delivered' %}bg-success{% elif order.status == 'shipped' %}bg-info text-dark{% else %}bg-warning text-dark{% endif %}">
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-sm btn-primary">
+                                        Manage & Track
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No consumer orders recorded yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+{% comment %} {% extends "layout.html" %}
+{% load static %}
+
+
+{% block content %}
+
+{% for order in orders %}
+<div class="container mt-4">
+    <table class="col-md-10">
+        <thead>
+            <th>Order Number</th>
+            <th>User</th>
+            <th>Paid</th>
+            <th>Status</th>
+        </thead>
+        <tbody>
+            <td><a href="{% url 'orders:order_detail' order.pk %}">{{ order.order_number }}</a></td>
+            <td>{{ order.user }}</td>
+            <td>{{ order.is_paid }}</td>
+            <td>{{ order.status }}</td>
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+
+{% endblock content %} {% endcomment %}

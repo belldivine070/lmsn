@@ -1,0 +1,117 @@
+{% extends 'layout.html' %}
+
+{% block title %}{% if page.meta_title %}{{ page.meta_title }}{% else %}{{ page.title }}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="dynamic-page-engine">
+
+    {% if page.show_title %}
+        <header class="bg-gray-900 text-white py-12 border-b border-gray-800 text-center">
+            <h1 class="text-4xl font-extrabold tracking-tight">{{ page.title }}</h1>
+        </header>
+    {% endif %}
+
+    {% for section in sections %}
+        
+        <div class="section-block-wrapper {% if not section.show_on_mobile %}hidden md:block{% endif %} {% if not section.show_on_desktop %}md:hidden{% endif %} {{ section.custom_css_class }}" 
+             style="{% if section.background_color %}background-color: {{ section.background_color }};{% endif %}">
+            
+            {% if section.layout_type == 'standard' or section.layout_type == 'hero' %}
+                <section class="max-w-6xl mx-auto py-16 px-4 grid md:grid-cols-2 gap-12 items-center">
+                    <div class="{% if section.order|divisibleby:2 %}md:order-last{% endif %}">
+                        {% if section.section_subtitle %}<span class="text-sm font-bold text-blue-500 uppercase tracking-wider">{{ section.section_subtitle }}</span>{% endif %}
+                        <h2 class="text-3xl font-extrabold text-gray-900 mt-2 mb-4">{{ section.section_title }}</h2>
+                        <div class="prose text-gray-600 mb-6">{{ section.body_content|safe }}</div>
+                        {% if section.cta_url %}
+                            <a href="{{ section.cta_url }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg transition shadow-sm">{{ section.cta_text|default:"Click Here" }}</a>
+                        {% endif %}
+                    </div>
+                    {% if section.image_asset %}
+                        <div>
+                            <img src="{{ section.image_asset.url }}" alt="{{ section.section_title }}" class="rounded-xl shadow-md w-full object-cover h-96">
+                        </div>
+                    {% endif %}
+                </section>
+
+            {% elif section.layout_type == 'products' or section.layout_type == 'categories' %}
+                <section class="max-w-6xl mx-auto py-16 px-4">
+                    <div class="text-center mb-10">
+                        <h2 class="text-3xl font-bold text-gray-900">{{ section.section_title|default:section.category.name }}</h2>
+                        {% if section.section_subtitle %}<p class="text-gray-500 mt-2">{{ section.section_subtitle }}</p>{% endif %}
+                    </div>
+
+                    {% if section.category %}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                            {% for item in section.category.products.all %}
+                                <div class="product-card border border-gray-200 rounded-xl p-4 bg-white shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                                    <div>
+                                        {% if item.image %}
+                                            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-48 object-cover rounded-lg mb-4">
+                                        {% endif %}
+                                        <h4 class="font-bold text-gray-900 text-lg">{{ item.name }}</h4>
+                                        <p class="text-gray-500 text-sm mt-1 line-clamp-2">{{ item.description|striptags }}</p>
+                                    </div>
+                                    <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                                        <span class="text-blue-600 font-extrabold">₦{{ item.price }}</span>
+                                        <a href="{{ item.get_absolute_url }}" class="text-xs bg-gray-900 hover:bg-blue-600 text-white font-medium px-3 py-1.5 rounded transition">View Product</a>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="col-span-full py-8 text-center text-gray-400 italic">
+                                    No dynamic items found loaded under the "{{ section.category.name }}" catalog block yet.
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-6 text-red-500 bg-red-50 border rounded-lg">
+                            An administrator assigned a data feed layout here, but forgot to hook up a Category collection in the dashboard workspace.
+                        </div>
+                    {% endif %}
+                </section>
+
+            {% elif section.layout_type == 'widget' %}
+                <section class="max-w-6xl mx-auto py-12 px-4">
+                    {% if section.section_title %}
+                        <h2 class="text-2xl font-bold mb-6 text-gray-900">{{ section.section_title }}</h2>
+                    {% endif %}
+
+                    {% if section.widget %}
+                        <div class="custom-widget-embedding-mount">
+                            <div class="widget-raw-data-render">
+                                {{ section.widget.html_content|safe }}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-6 text-amber-600 bg-amber-50 border rounded-lg">
+                            Custom widget node mounted without an active backend component mapping selection.
+                        </div>
+                    {% endif %}
+                </section>
+
+            {% elif section.layout_type == 'info' or section.layout_type == 'cta' %}
+                <section class="bg-gray-100 py-10 px-6 text-center border-y border-gray-200">
+                    <div class="max-w-4xl mx-auto">
+                        <h3 class="text-2xl font-bold text-gray-900">{{ section.section_title }}</h3>
+                        {% if section.section_subtitle %}<p class="text-gray-600 text-sm mt-1">{{ section.section_subtitle }}</p>{% endif %}
+                        {% if section.body_content %}
+                            <div class="mt-3 text-gray-600">{{ section.body_content|safe }}</div>
+                        {% endif %}
+                        {% if section.cta_url %}
+                            <a href="{{ section.cta_url }}" class="mt-4 inline-block bg-gray-900 hover:bg-blue-600 text-white font-medium px-6 py-2 rounded transition shadow-sm text-sm">{{ section.cta_text|default:"Learn More" }}</a>
+                        {% endif %}
+                    </div>
+                </section>
+
+            {% endif %}
+
+        </div>
+    {% empty %}
+        <div class="max-w-md mx-auto py-32 px-4 text-center">
+            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <h3 class="text-lg font-bold text-gray-800">Empty Page Scaffold</h3>
+            <p class="text-gray-500 text-sm mt-1">This workspace layout contains no dynamic container segments yet.</p>
+        </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

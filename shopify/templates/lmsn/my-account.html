@@ -1,0 +1,362 @@
+{% extends "lmsn/layout.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+ /* Icons */
+.dashboard_menu .nav-tabs li.nav-item a i {
+    color: #FF324D;
+    margin-right: 10px;
+    transition: 0.3s ease;
+}
+
+/* Hover & active */
+.dashboard_menu .nav-tabs li.nav-item a:hover,
+.dashboard_menu .nav-tabs li.nav-item a.active {
+    background-color: #FF324D;
+    color: #fff !important;
+}
+
+.dashboard_menu .nav-tabs li.nav-item a:hover i,
+.dashboard_menu .nav-tabs li.nav-item a.active i {
+    color: #fff !important;
+}
+
+/* Apply theme color to ALL headings inside this page only */
+.dashboard_content h3,
+.dashboard_content h4 {
+    color: #FF324D;
+}
+
+</style>
+
+
+<div class="breadcrumb_section bg_gray page-title-mini">
+    <div class="container"><div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="page-title">
+                    <h1>My Account</h1>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <ol class="breadcrumb justify-content-md-end">
+                    <li class="breadcrumb-item"><a href="{% url 'lmsn:index' %}">Home</a></li>
+                    <li class="breadcrumb-item active">My Account</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+<div>
+
+<div class="main_content">
+
+<div class="section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3 col-md-4">
+                <div class="dashboard_menu">
+                    <ul class="nav nav-tabs flex-column" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" href="#dashboard" role="tab"><i class="ti-layout-grid2"></i>Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="orders-tab" data-bs-toggle="tab" href="#orders" role="tab"><i class="ti-shopping-cart"></i>Orders</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="wishlist-tab" data-bs-toggle="tab" href="#wishlist" role="tab"><i class="ti-heart"></i>Wish List</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="#address" role="tab"><i class="ti-location-pin"></i>My Address</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="account-detail-tab" data-bs-toggle="tab" href="#account-detail" role="tab"><i class="ti-id-badge"></i>Account details</a>
+                        </li>
+                        <li class="nav-item">
+                            <form action="{% url 'accounts:logout' %}" method="post" id="logout-form" style="display: none;">
+                                {% csrf_token %}
+                            </form>
+                            <a href="javascript:void(0);" class="nav-link" onclick="document.getElementById('logout-form').submit();"><i class="ti-lock"></i>Logout</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-9 col-md-8">
+                <div class="tab-content dashboard_content">
+
+                    <div class="tab-pane fade active show" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                        <div class="card">
+                            <div class="card-header"><h3>Dashboard</h3></div>
+                            <div class="card-body">
+                                <p>Hello <strong>{{ user.first_name }} {{ user.last_name }}</strong>,</p>
+                                <p>From your account dashboard you can easily view your <a href="javascript:;" onclick="switchMyAccountTab('orders-tab')">recent orders</a>, manage your <a href="javascript:;" onclick="switchMyAccountTab('address-tab')">shipping and billing addresses</a> and <a href="javascript:;" onclick="switchMyAccountTab('account-detail-tab')">edit your account details.</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="orders" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header"><h3>Orders</h3></div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Order</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                                <th>Total</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for order in orders %}
+                                            <tr>
+                                                <td>#{{ order.order_number }}</td>
+                                                <td>{{ order.created_at|date:"F d, Y" }}</td>
+                                                <td>{{ order.status }}</td>
+                                                <td>${{ order.total_amount }}</td>
+                                                <td>
+                                                    {% if not order.is_paid and order.status == 'pending' %}
+                                                        <a href="{% url 'orders:checkout_retry' order.id %}" class="btn btn-fill-out btn-sm">
+                                                            <i class="ti-shopping-cart"></i> Pay Now
+                                                        </a>
+                                                    {% else %}
+                                                        <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-fill-out btn-sm">
+                                                            <i class="ti-eye"></i> View
+                                                        </a>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                                <p class="text-center">No order found.</p>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="wishlist" role="tabpanel" aria-labelledby="wishlist-tab">
+                        <div class="card">
+                            <div class="card-header"><h3>Wish List</h3></div>
+                            <div class="card-body">
+                                <div class="table-responsive wishlist_table">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th class="product-thumbnail">&nbsp;</th>
+                                                <th class="product-name">Product</th>
+                                                <th class="product-price">Price</th>
+                                                <th class="product-stock-status">Stock Status</th>
+                                                <th class="product-add-to-cart"></th>
+                                                <th class="product-remove">Remove</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="wishlist-tbody">
+                                            {% for item in wishlist_items %}
+                                            <tr id="wishlist-row-{{ item.id }}">
+                                                <td class="product-thumbnail">
+                                                    <a href="{% url 'lmsn:product_detail' item.product.id %}">
+                                                        {% if item.product.is_primary %}
+                                                            <img src="{{ item.product.is_primary.file.url }}" alt="{{ item.product.name }}">
+                                                        {% endif %}
+                                                    </a>
+                                                </td>
+                                                <td class="product-name" data-title="Product">
+                                                    <a href="{% url 'lmsn:product_detail' item.product.id %}">{{ item.product.name }}</a>
+                                                </td>
+                                                <td class="product-price" data-title="Price">${{ item.product.selling_price }}</td>
+                                                <td class="product-stock-status" data-title="Stock Status">
+                                                    {% if item.product.total_stock > 0 %}
+                                                        <span class="badge rounded-pill text-bg-success">In Stock</span>
+                                                    {% else %}
+                                                        <span class="badge rounded-pill text-bg-danger">Out of Stock</span>
+                                                    {% endif %}
+                                                </td>
+                                               <td class="product-add-to-cart">
+                                                    {% if item.product.product_type == "simple" %}
+                                                        {# For Simple Products, grab the SKU from the first inventory record #}
+                                                        {% with first_stock=item.product.inventory_records.first %}
+                                                            {% if first_stock and first_stock.quantity > 0 %}
+                                                                <a href="javascript:void(0);" 
+                                                                class="btn btn-fill-out btn-sm ajax-add-to-cart" 
+                                                                data-sku="{{ first_stock.sku }}">
+                                                                    <i class="icon-basket-loaded"></i> Add to Cart
+                                                                </a>
+                                                            {% else %}
+                                                                <button class="btn btn-fill-out btn-sm disabled" disabled>Out of Stock</button>
+                                                            {% endif %}
+                                                        {% endwith %}
+                                                    {% else %}
+                                                        {# For Variable Products, always redirect to select specific color/size #}
+                                                        <a href="{% url 'lmsn:product_detail' item.product.id %}" class="btn btn-fill-out btn-sm">
+                                                            <i class="icon-basket-loaded"></i> Select Options
+                                                        </a>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="product-remove" data-title="Remove">
+                                                    <a href="javascript:void(0);" class="remove-wishlist-item" data-item-id="{{ item.id }}">
+                                                        <i class="ti-close"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="6" class="text-center py-4">Your wish list is empty.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card mb-3 mb-lg-0">
+                                    <div class="card-header">
+                                        <h3>Shipping Address</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        {% for address in location %}
+                                        <address>
+                                            <p>Address : {{ address.address_line_1 }}</p>
+                                            <p>City : {{ address.city }}</p>
+                                            <p>State : {{ address.state }}</p>
+                                            <p>Country : {{ address.country }}</p>
+                                        </address>
+                                        {% empty %}
+                                        <p>No address on file.</p>
+                                        {% endfor %}
+                                        <a href="javascript:;" onclick="$('#account-detail-tab').trigger('click')" class="btn btn-fill-out">Edit</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="account-detail" role="tabpanel" aria-labelledby="account-detail-tab">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Account Details</h3>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" action="#account-detail">
+                                    {% csrf_token %}
+                                    <div class="card border border-light-subtle shadow-sm rounded-3 mb-4">
+                                        <div class="card-body p-3">
+                                            <label class="form-label small fw-bold text-secondary text-uppercase tracking-wider mb-2">Image Upload</label>
+                                            
+                                            <div class="bg-light border border-dashed rounded-3 mb-3 d-flex align-items-center justify-content-center overflow-hidden position-relative" style="height: 180px; border-color: #cbd5e1 !important;">    
+                                                <img id="imagePreviewRender" 
+                                                    src="{% if object.profile_image %}{{ object.profile_image.url }}{% else %}<img scr='{% static 'assets/images/dafault-user.png' %}'>{% endif %}" 
+                                                    class="w-100 h-100 {% if object.profile_image %}object-fit-cover{% else %}object-fit-contain p-4 opacity-50{% endif %}" 
+                                                    alt="Preview Canvas Container">
+                                            </div>
+
+                                            <input type="file" name="profile_image" id="simpleImageFileInput" class="d-none" accept="image/jpeg, image/png, image/webp">
+                                            
+                                            <label for="simpleImageFileInput" class="btn btn-sm btn-outline-dark w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 rounded-2 shadow-sm transition-all">
+                                                <i class="bi bi-camera-fill"></i> Choose Image File
+                                            </label>
+                                        </div>
+                                    </div>
+                                </form>
+                                <form method="post" action="#account-detail">
+                                    {% csrf_token %}
+                                    <div class="row">
+                                        <div class="form-group col-md-6 mb-3">
+                                            <label>First Name <span class="required">*</span></label>
+                                            <input required="" class="form-control" name="first_name" value="{{ form.first_name.value|default:'' }}" type="text">
+                                        </div>
+                                        <div class="form-group col-md-6 mb-3">
+                                            <label>Last Name <span class="required">*</span></label>
+                                            <input required="" class="form-control" name="last_name" value="{{ form.last_name.value|default:'' }}" type="text">
+                                        </div>
+                                        <div class="form-group col-md-12 mb-3">
+                                            <label>Email Address <span class="required">*</span></label>
+                                            <input required="" class="form-control" name="email" value="{{ form.email.value|default:'' }}" type="email">
+                                        </div>
+                                        <div class="form-group col-md-12 mb-3">
+                                            <label>Mobile<span class="required">*</span></label>
+                                            <input required="" class="form-control" name="mobile" value="{{ form.mobile.value|default:'' }}" type="text">
+                                        </div>
+
+                                        <div class="col-md-12"><hr class="my-4"></div>
+                                        <div class="col-md-12"><h4 class="mb-3">Address Details</h4></div>
+                                            
+                                        {{ address_form.management_form }}
+                                        {% for addr_form in address_form %}
+                                        <div class="form-group col-md-12 mb-3">
+                                            <label>Shipping Address <span class="required">*</span></label>
+                                            <input required="" class="form-control" name="{{ addr_form.address_line_1.html_name }}" value="{{ addr_form.address_line_1.value|default:'' }}" type="text">
+                                        </div>
+                                         <div class="form-group col-md-6 mb-3">
+                                            <label>City <span class="required">*</span></label>
+                                            <input required="" class="form-control" name="{{ addr_form.city.html_name }}" value="{{ addr_form.city.value|default:'' }}" type="text">
+                                        </div>
+                                        <div class="form-group col-md-6 mb-3">
+                                            <label>State <span class="required">*</span></label>
+                                            <input required="" class="form-control" name="{{ addr_form.state.html_name }}" value="{{ addr_form.state.value|default:'' }}" type="text">
+                                        </div>
+                                        <div class="form-group col-md-6 mb-3">
+                                            <label>Country <span class="required">*</span></label>
+                                            <input required="" class="form-control" name="{{ addr_form.country.html_name }}" value="{{ addr_form.country.value|default:'' }}" type="text">
+                                        </div>
+                                        {% for hidden in addr_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                        {% endfor %}
+                                        
+                                        <div class="col-md-12">
+                                            <button type="submit" class="btn btn-fill-out" name="submit" value="Submit">Save</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    // Activate tab from URL hash
+    const hash = window.location.hash;
+    if (hash) {
+        const triggerEl = document.querySelector(`.nav-link[href="${hash}"]`);
+        if (triggerEl) {
+            new bootstrap.Tab(triggerEl).show();
+        }
+    }
+
+    // Update URL without jumping
+    document.querySelectorAll('.nav-link[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function (e) {
+            history.replaceState(null, null, e.target.getAttribute('href'));
+        });
+    });
+
+    // Safe tab switcher
+    window.switchMyAccountTab = function(tabId) {
+        const tabEl = document.getElementById(tabId);
+        if (tabEl) {
+            new bootstrap.Tab(tabEl).show();
+        }
+    };
+});
+
+
+</script>
+
+{% endblock content %}

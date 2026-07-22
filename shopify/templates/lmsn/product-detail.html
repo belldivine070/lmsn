@@ -1,0 +1,335 @@
+{% extends "lmsn/layout.html" %}
+{% load static %}
+
+
+
+{% block content %}
+
+<!-- START SECTION BREADCRUMB -->
+<div class="breadcrumb_section bg_gray page-title-mini">
+    <div class="container"><!-- STRART CONTAINER -->
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="page-title">
+                    <h1>Product Detail</h1>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <ol class="breadcrumb justify-content-md-end">
+                    <li class="breadcrumb-item"><a href="{% url 'lmsn:index' %}">Home</a></li>
+                    <li class="breadcrumb-item active">Product Detail</li>
+                </ol>
+            </div>
+        </div>
+    </div><!-- END CONTAINER-->
+</div>
+<!-- END SECTION BREADCRUMB -->
+
+
+<!-- START MAIN CONTENT -->
+<div class="main_content">
+
+<!-- START SECTION SHOP -->
+<div class="section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 col-md-6 mb-4 mb-md-0">
+              <div class="product-image">
+                    <div class="product_img_box">
+                        {% if ".mp4" in product.is_primary.file.url or ".webm" in product.is_primary.file.url %}
+                            <video id="product_video" controls style="width: 100%;">
+                                <source src="{{ product.is_primary.file.url }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        {% else %}
+                            <img id="product_img" src='{{ product.is_primary.file.url }}' data-zoom-image="{{ product.is_primary.file.url }}" alt="{{ product.name }}" />
+                        {% endif %}
+                        
+                        <a href="#" class="product_img_zoom" title="Zoom">
+                            <span class="linearicons-zoom-in"></span>
+                        </a>
+                    </div>
+
+                    <div id="pr_item_gallery" class="product_gallery_item slick_slider" data-slides-to-show="4" data-slides-to-scroll="1" data-infinite="false">
+                        <div class="item">
+                            <a href="#" class="product_gallery_item" data-image="{{ product.is_primary.file.url }}" data-zoom-image="{{ product.is_primary.file.url }}">
+                                {% if ".mp4" in product.is_primary.file.url %}
+                                    <video muted src="{{ product.is_primary.file.url }}" style="width:100%"></video>
+                                {% else %}
+                                    <img src="{{ product.is_primary.file.url }}" alt="primary_thumb" />
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="item">
+                            <a href="#" class="product_gallery_item" data-image="{{ product.is_secondary.file.url }}" data-zoom-image="{{ product.is_secondary.file.url }}">
+                                {% if ".mp4" in product.is_primary.file.url %}
+                                    <video muted src="{{ product.is_secondary.file.url }}" style="width:100%"></video>
+                                {% else %}
+                                    <img src="{{ product.is_secondary.file.url }}" alt="secondary_thumb" />
+                                {% endif %}
+                            </a>
+                        </div>
+                        {% for item in product.gallery.all %}
+                        <div class="item">
+                            {% if ".mp4" in item.file.url or ".webm" in item.file.url %}
+                            <a href="#" class="product_gallery_item" data-image="{{ item.file.url }}" data-zoom-image="{{ item.file.url }}">
+                                <video muted style="width: 100%;">
+                                    <source src="{{ item.file.url }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>                           
+                            </a>
+                            {% else %}
+                            <a href="#" class="product_gallery_item" data-image="{{ item.file.url }}" data-zoom-image="{{ item.file.url }}">
+                                {% if ".mp4" in item.file.url %}
+                                    <video muted src="{{ item.file.url }}" style="width:100%"></video>
+                                {% else %}
+                                    <img src="{{ item.file.url }}" alt="gallery_thumb_{{ forloop.counter }}" />
+                                {% endif %}
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 col-md-6">
+                <div class="pr_detail">
+                    <div class="product_description">
+                        <h4 class="product_title"><a href="#">{{ product.name }}</a></h4>
+                        <div class="product_price">
+                            <span class="price" id="variant-price">${{ product.selling_price }}</span>
+                            {% if product.old_price %}
+                                <del>${{ product.old_price }}</del>
+                                <div class="on_sale">
+                                    <span>{{ product.discount }}% off</span>
+                                    {% comment %} <span>Save ${{ product.savings_amount }}</span> {% endcomment %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="rating_wrap">
+                            <div class="rating">
+                                <div class="product_rate" style="width:{{ product.rating_percentage }}%"></div>
+                            </div>
+                            <span class="rating_num">({{ product.reviews.count }})</span>
+                        </div>
+                        <div class="pr_desc">
+                            <p>{{ product.description }}</p>
+                        </div>
+                        <div class="product_sort_info">
+                            <ul>
+                                <li><i class="linearicons-shield-check"></i> 1 Year AL Jazeera Brand Warranty</li>
+                                <li><i class="linearicons-sync"></i> 30 Day Return Policy</li>
+                                <li><i class="linearicons-bag-dollar"></i> Cash on Delivery available</li>
+                            </ul>
+                        </div>
+                        {% if product.product_type == "variable" %}
+                        <div class="pr_switch_wrap">
+                            <span class="switch_lable">Color</span>
+                            <div class="product_color_switch">
+                                {% for color in unique_colors %}
+                                    <span class="color-picker" data-color="{{ color.name }}" 
+                                          style="background-color: {{ color.hex }}; cursor: pointer;" 
+                                          title="{{ color.name }}"></span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="pr_switch_wrap">
+                            <span class="switch_lable">Size</span>
+                            <div class="product_size_switch" id="size-container">
+                                </div>
+                        </div>
+                        {% endif %}
+                        <hr />
+                        <div class="cart_extra">
+                            <div class="cart-product-quantity">
+                                <div class="quantity">
+                                    <input type="button" value="-" class="minus">
+                                    <input type="text" id="product-qty" value="1" class="qty" size="4">
+                                    <input type="button" value="+" class="plus">
+                                </div>
+                            </div>
+                            <div class="cart_btn">
+                                <button class="btn btn-fill-out ajax-add-to-cart" 
+                                        type="button"
+                                        id="add-to-cart-btn"
+                                        data-sku="{% if product.product_type == 'simple' %}{{ product.inventory_records.first.sku }}{% endif %}">
+                                    <i class="icon-basket-loaded"></i> Add to cart
+                                </button>
+                                <a class="add_compare" href="#"><i class="icon-shuffle"></i></a>
+                                {% if user.is_authenticated %}
+                                <a class="add_wishlist" href="javascript:void(0);" id="wishlist-btn" data-product-id="{{ product.id }}">
+                                    <i class="icon-heart"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <hr />
+                        <ul class="product-meta">
+                            <li>SKU: <a href="javascript:void(0);" id="variant-sku">
+                                {% if product.product_type == 'simple' %}{{ product.inventory_records.first.sku }}{% else %}Select Variant{% endif %}
+                            </a></li>
+                            <li>Category: <a href="#">{{ product.category.name }}</a></li>
+                            <li>Tags: 
+                                {% for tag in tag_list %}
+                                    <a href="{% url 'lmsn:shop' %}?tag={{ tag }}">{{ tag }}</a>{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="product_share">
+                        <span>Share:</span>
+                        <ul class="social_icons">
+                            <li><a href="#"><i class="ion-social-facebook"></i></a></li>
+                            <li><a href="#"><i class="ion-social-twitter"></i></a></li>
+                            <li><a href="#"><i class="ion-social-googleplus"></i></a></li>
+                            <li><a href="#"><i class="ion-social-youtube-outline"></i></a></li>
+                            <li><a href="#"><i class="ion-social-instagram-outline"></i></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="large_divider clearfix"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="tab-style3">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="Description-tab" data-bs-toggle="tab" href="#Description" role="tab" aria-controls="Description" aria-selected="true">Description</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="Additional-info-tab" data-bs-toggle="tab" href="#Additional-info" role="tab" aria-controls="Additional-info" aria-selected="false">Additional info</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="Reviews-tab" data-bs-toggle="tab" href="#Reviews" role="tab" aria-controls="Reviews" aria-selected="false">Reviews ({{ product.reviews.count }})</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content shop_info_tab">
+                        <div class="tab-pane fade show active" id="Description" role="tabpanel" aria-labelledby="Description-tab">
+                            <p>{{ product.description }}</p>
+                        </div>
+                        <div class="tab-pane fade" id="Additional-info" role="tabpanel" aria-labelledby="Additional-info-tab">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td>Capacity</td>
+                                    <td>5 Kg</td>
+                                </tr>
+                                <tr>
+                                    <td>Color</td>
+                                    <td>Black, Brown, Red,</td>
+                                </tr>
+                                <tr>
+                                    <td>Water Resistant</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Material</td>
+                                    <td>Artificial Leather</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="tab-pane fade" id="Reviews" role="tabpanel" aria-labelledby="Reviews-tab">
+                            <div class="comments">
+                                <h5 class="product_tab_title">{{ product.reviews.count }} Reviews For <span>{{ product.name }}</span></h5>
+                                <ul class="list_none comment_list mt-4">
+                                    {% for review in product.reviews.all %}                                    
+                                    <li>
+                                        <div class="comment_img">
+                                            <img src="{{ review.user.profile_url }}" alt="profile"/>
+                                        </div>
+                                        <div class="comment_block">
+                                            <div class="rating_wrap">
+                                                <div class="rating">
+                                                    <div class="product_rate" style="width:{{ review.product.rating_percentage }}%"></div>
+                                                </div>
+                                            </div>
+                                            <p class="customer_meta">
+                                                <span class="review_author">{{ review.user.full_name }}</span>
+                                                <span class="comment-date">{{ review.created_at|date:"F d, Y" }}</span>
+                                            </p>
+                                            <div class="description">
+                                                <p>{{ review.comment }}</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    {% empty %}
+                                        <p>No Review </p>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="small_divider"></div>
+                <div class="divider"></div>
+                <div class="medium_divider"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="heading_s1">
+                    <h3>Related Products</h3>
+                </div>
+                <div class="releted_product_slider carousel_slider owl-carousel owl-theme" data-margin="20" data-responsive='{"0":{"items": "1"}, "481":{"items": "2"}, "768":{"items": "3"}, "1199":{"items": "4"}}'>
+                    {% for related in product.category.products.all|slice:":5" %}
+                        {% if related.id != product.id %}
+                        <div class="item">
+                            <div class="product">
+                                <div class="product_img">
+                                    <a href="{% url 'lmsn:product_detail' related.id %}">
+                                        <img src="{{ related.is_primary.file.url }}" alt="{{ related.name }}">
+                                    </a>
+                                    <div class="product_action_box">
+                                        <ul class="list_none pr_action_btn">
+                                            <li class="add-to-cart"><a href="#"><i class="icon-basket-loaded"></i> Add To Cart</a></li>
+                                            <li><a href="shop-compare.html"><i class="icon-shuffle"></i></a></li>
+                                            <li><a href="shop-quick-view.html" class="popup-ajax"><i class="icon-magnifier-add"></i></a></li>
+                                            <li><a href="#"><i class="icon-heart"></i></a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="product_info">
+                                    <h6 class="product_title"><a href="{% url 'lmsn:product_detail' related.id %}">{{ related.name }}</a></h6>
+                                    <div class="product_price">
+                                        <span class="price">${{ related.selling_price }}</span>
+                                        {% if related.old_price %}
+                                            <del>${{ related.old_price }}</del>
+                                            <div class="on_sale">
+                                                <span>{{ related.discount }}% off</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="rating_wrap">
+                                        <div class="rating">
+                                            <div class="product_rate" style="width:80%"></div>
+                                        </div>
+                                        <span class="rating_num">({{ related.reviews.count }})</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END SECTION SHOP -->
+
+
+</div>
+<!-- END MAIN CONTENT -->
+
+
+{% endblock content %}

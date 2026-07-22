@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h1>{{ post.title }}</h1>
+    
+    <p>Category: {{ post.category.name }}</p>
+
+    {% if 'author' in enabled_fields and post.author %}
+        <p>By: <strong>{{ post.author.get_full_name|default:post.author.username }}</strong></p>
+    {% endif %}
+
+    {% if 'excerpt' in enabled_fields and post.excerpt %}
+        <div class="excerpt">
+            <p>{{ post.excerpt|safe }}</p>
+            <hr>
+        </div>
+    {% endif %}
+    
+    {% if 'image' in enabled_fields and post.image %}
+        <div class="main-image">
+            <img src="{{ post.image.url }}" alt="{{ post.title }} image">
+        </div>
+    {% endif %}
+
+    {% if 'content' in enabled_fields and post.content %}
+        <div class="main-content">
+            {{ post.content|safe }}
+        </div>
+    {% endif %} 
+    
+    {% if 'btn_url' in enabled_fields and post.btn_url %}
+        <div class="cta-button">
+            <a href="{{ post.btn_url }}" class="btn btn-primary">
+                {{ post.btn_text|default:"Read More" }}
+            </a>
+        </div>
+    {% endif %}
+
+    <small>Published: {{ post.created_at|date:"F j, Y" }}</small>
+
+{% endblock content %}

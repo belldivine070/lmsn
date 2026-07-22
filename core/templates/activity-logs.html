@@ -1,0 +1,54 @@
+{% extends "layout.html" %} 
+
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Activity Logs</h2>
+    </div>
+
+    <div class="table-responsive card shadow-sm">
+        <table class="table table-striped table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col" style="width: 15%;">User</th>
+                    <th scope="col" style="width: 15%;">Event Type</th>
+                    <th scope="col" style="width: 50%;">Description</th>
+                    <th scope="col" style="width: 20%;">Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                    <tr>
+                        <td class="fw-bold text-secondary">
+                            {% if log.user %}
+                                {{ log.user.full_name|default:log.user }}
+                            {% else %}
+                                <span class="text-muted">System</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-dark text-capitalize">
+                                {{ log.activity_type }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-wrap">{{ log.description }}</span>
+                        </td>
+                        <td class="text-muted text-nowrap">
+                            {{ log.timestamp|date:"Y-m-d H:i:s" }}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            No logs found matching the current database filters.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

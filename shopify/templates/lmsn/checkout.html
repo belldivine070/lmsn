@@ -1,0 +1,241 @@
+{% extends "lmsn/layout.html" %}
+{% load static %}
+
+{% block content %}
+
+
+<!-- START MAIN CONTENT -->
+<div class="main_content">
+
+<!-- START SECTION SHOP -->
+<div class="section">
+	<div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+            	<div class="toggle_info">
+                	<span><i class="fas fa-user"></i>Returning customer? <a href="checkout.html#loginform" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Click here to login</a></span>
+                </div>
+                <div class="panel-collapse collapse login_form" id="loginform">
+                    <div class="panel-body">
+                    	<p>If you have shopped with us before, please enter your details below. If you are a new customer, please proceed to the Billing &amp; Shipping section.</p>
+                    	<form method="post">
+                            <div class="form-group mb-3">
+                                <input type="text" required="" class="form-control" name="email" placeholder="Username Or Email">
+                            </div>
+                            <div class="form-group mb-3">
+                                <input class="form-control" required="" type="password" name="password" placeholder="Password">
+                            </div>
+                            <div class="login_footer form-group mb-3">
+                                <div class="chek-form">
+                                    <div class="custome-checkbox">
+                                        <input class="form-check-input" type="checkbox" name="checkbox" id="remember" value="">
+                                        <label class="form-check-label" for="remember"><span>Remember me</span></label>
+                                    </div>
+                                </div>
+                                <a href="checkout.html#">Forgot password?</a>
+                            </div>
+                            <div class="form-group mb-3">
+                                <button type="submit" class="btn btn-fill-out btn-block" name="login">Log in</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+            	<div class="toggle_info">
+            		<span><i class="fas fa-tag"></i>Have a coupon? <a href="checkout.html#coupon" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Click here to enter your code</a></span>
+                </div>
+                <div class="panel-collapse collapse coupon_form" id="coupon">
+                    <div class="panel-body">
+                    	<p>If you have a coupon code, please apply it below.</p>
+                        <div class="coupon field_form input-group">
+                            <input type="text" value="" class="form-control" placeholder="Enter Coupon Code..">
+                            <div class="input-group-append">
+                                <button class="btn btn-fill-out btn-sm" type="submit">Apply Coupon</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+            	<div class="medium_divider"></div>
+            	<div class="divider center_icon"><i class="linearicons-credit-card"></i></div>
+            	<div class="medium_divider"></div>
+            </div>
+        </div>
+        <form method="post" action="{% url 'orders:checkout' %}">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="heading_s1">
+                        <h4>Shipping & Recipient Details</h4>
+                    </div>
+                    <div class="alert alert-secondary small">
+                        Pre-filled with your profile info. Update if sending to a friend in another city.
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <input type="text" required class="form-control" name="full_name" value="{{ default_name }}" placeholder="Recipient Full Name *">
+                    </div>
+                    <div class="form-group mb-3">
+                        <input type="email" required class="form-control" name="email" value="{{ default_email }}" placeholder="Recipient Email address *">
+                    </div>
+                    <div class="form-group mb-3">
+                        <input class="form-control" required type="text" name="phone" value="{{ default_phone }}" placeholder="Recipient Phone *">
+                    </div>
+                    <div class="form-group mb-3">
+                        <input type="text" class="form-control" name="address" value="{{ saved_address }}" required placeholder="Street Address *">
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6 mb-3">
+                            <input class="form-control" required type="text" name="city" value="{{ saved_city }}" placeholder="City / Town *">
+                        </div>
+                        <div class="form-group col-md-6 mb-3">
+                            <input class="form-control" required type="text" name="state" value="{{ saved_state }}" placeholder="State *">
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <input class="form-control" required type="text" name="zip_code" placeholder="Postcode / ZIP *">
+                    </div>
+
+                    <div class="heading_s1 mt-4">
+                        <h4>Additional information</h4>
+                    </div>
+                    <div class="form-group mb-0">
+                        <textarea rows="5" class="form-control" name="order_notes" placeholder="Order notes (optional)"></textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="order_review">
+                        <div class="heading_s1">
+                            <h4>Your Orders</h4>
+                        </div>
+                        <div class="alert alert-info py-2 small">
+                            <i class="fas fa-info-circle"></i> Uncheck items you want to keep in your cart for later.
+                        </div>
+                        <div class="table-responsive order_table">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Order?</th>
+                                        <th>Product</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                    <tr>
+                                        <td class="text-center">
+                                            <input type="checkbox" name="selected_items" value="{{ item.id }}" checked class="form-check-input cart-item-check" data-price="{{ item.subtotal }}">
+                                        </td>
+                                        <td>{{ item.product.name }} <span class="product-qty">x {{ item.quantity }}</span>
+                                        <br>
+                                        {% if item.product.product_type == 'variable' %}
+                                        <small class="text-muted">{{ item.variant.color.name }} / {{ item.variant.size.name }}</small>
+                                        {% endif %}
+                                        </td>
+                                        <td>${{ item.subtotal }}</td>
+                                    </tr> 
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th> </th>
+                                        <th>SubTotal</th>                                    
+                                        <td id="display-subtotal" class="product-subtotal">${{ cart.total_price }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th> </th>
+                                        <th>Shipping</th>
+                                        <td>Free Shipping</td>
+                                    </tr>
+                                    <tr>
+                                        <th> </th>  
+                                        <th>Total</th>
+                                        <td id="display-total" class="product-subtotal" style="font-weight: bold; color: #FF324D; font-size: 20px;">${{ cart.total_price }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="payment_method">
+                                <div class="heading_s1">
+                                    <h4>Payment</h4>
+                                </div>
+                                <div class="payment_option">
+                                    <div class="custome-radio">
+                                        <input class="form-check-input" required type="radio" name="payment_option" id="paystack_radio" value="paystack" checked>
+                                        <label class="form-check-label" for="paystack_radio">Pay with Paystack (Cards, Bank Transfer, USSD)</label>
+                                        <p class="payment-text">Securely process your payment using Paystack gateway. You will be redirected to their secure portal.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-fill-out btn-block">Place Order & Pay</button>
+                        </div>
+                        {% comment %} <div class="payment_method">
+                            <div class="heading_s1">
+                                <h4>Payment</h4>
+                            </div>
+                            <div class="payment_option">
+                                <div class="custome-radio">
+                                    <input class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios3" value="option3" checked="">
+                                    <label class="form-check-label" for="exampleRadios3">Direct Bank Transfer</label>
+                                    <p data-method="option3" class="payment-text">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration. </p>
+                                </div>
+                                <div class="custome-radio">
+                                    <input class="form-check-input" type="radio" name="payment_option" id="exampleRadios4" value="option4">
+                                    <label class="form-check-label" for="exampleRadios4">Check Payment</label>
+                                    <p data-method="option4" class="payment-text">Please send your cheque to Store Name, Store Street, Store Town, Store State / County, Store Postcode.</p>
+                                </div>
+                                <div class="custome-radio">
+                                    <input class="form-check-input" type="radio" name="payment_option" id="exampleRadios5" value="option5">
+                                    <label class="form-check-label" for="exampleRadios5">Paypal</label>
+                                    <p data-method="option5" class="payment-text">Pay via PayPal; you can pay with your credit card if you don't have a PayPal account.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="checkout.html#" class="btn btn-fill-out btn-block">Place Order</a> {% endcomment %}
+                    </div> 
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- END SECTION SHOP -->
+
+</div>
+<!-- END MAIN CONTENT -->
+
+
+
+<script>
+    // Dynamic price calculation when unchecking items
+    document.querySelectorAll('.cart-item-check').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            let total = 0;
+            
+            document.querySelectorAll('.cart-item-check:checked').forEach(checked => {
+                // Read value string cleanly
+                let priceRaw = checked.getAttribute('data-price') || '0';
+                
+                // Scrub out everything that is NOT a digit or a decimal point (strips accidental '$')
+                let priceClean = priceRaw.replace(/[^0-9.]/g, '');
+                
+                let parsedPrice = parseFloat(priceClean);
+                
+                // Add value to running total if it successfully parses to a real number
+                if (!isNaN(parsedPrice)) {
+                    total += parsedPrice;
+                }
+            });
+            
+            // Update UI selectors accurately
+            document.getElementById('display-subtotal').innerText = '$' + total.toFixed(2);
+            document.getElementById('display-total').innerText = '$' + total.toFixed(2);
+        });
+    });
+</script>
+
+
+{% endblock content %} 
