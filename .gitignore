@@ -4,3 +4,20 @@
 # *.sqlite3
 .venv/
 settings.py
+
+
+# Ignore media files
+media/
+*.mp4
+*.mkv
+*.avi
+
+# Ignore virtual environments
+.venv/
+venv/
+env/
+
+# Ignore database and cache
+*.sqlite3
+__pycache__/
+.vscode/
